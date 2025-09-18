@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart' as io;
 import '../models/models.dart';
 
 /// Daemon detection and connection management for snappy_web_agent
@@ -11,31 +11,27 @@ class DaemonDetector {
 
   /// Detect snappy_web_agent daemon and return connection info
   static Future<DaemonInfo?> detectDaemon() async {
-    print('DaemonDetector: Scanning ports $_startPort to $_endPort for snappy_web_agent daemon');
 
     for (int port = _startPort; port <= _endPort; port++) {
-      print('DaemonDetector: Testing port $port');
 
       final daemonInfo = await _testPort(port);
       if (daemonInfo != null) {
-        print('DaemonDetector: Found daemon at port $port, version: ${daemonInfo.version}');
         return daemonInfo;
       }
     }
 
-    print('DaemonDetector: No daemon found on any port');
     return null;
   }
 
   /// Test if daemon is running on specific port
   static Future<DaemonInfo?> _testPort(int port) async {
-    IO.Socket? socket;
+    io.Socket? socket;
     try {
       final url = 'http://localhost:$port';
       final completer = Completer<DaemonInfo?>();
 
       // Create socket connection with timeout
-      socket = IO.io(url, IO.OptionBuilder()
+      socket = io.io(url, io.OptionBuilder()
           .setTransports(['websocket', 'polling'])
           .enableForceNew()
           .setTimeout(_connectionTimeout.inMilliseconds)
@@ -44,12 +40,10 @@ class DaemonDetector {
 
       // Set up handlers
       socket.onConnect((_) {
-        print('DaemonDetector: Connected to $url, testing version command');
 
         // Test if this is actually snappy_web_agent by getting version
         socket!.emitWithAck('version', null, ack: (response) {
           try {
-            print('DaemonDetector: Version response from port $port: $response');
 
             Map<String, dynamic>? responseData;
 
@@ -69,24 +63,20 @@ class DaemonDetector {
                   version: pluginResponse.message,
                   url: url,
                 );
-                print('DaemonDetector: Successfully validated daemon at port $port, version: ${pluginResponse.message}');
                 if (!completer.isCompleted) {
                   completer.complete(daemonInfo);
                 }
               } else {
-                print('DaemonDetector: Invalid version response on port $port - success: ${pluginResponse.success}, command: ${pluginResponse.command}');
                 if (!completer.isCompleted) {
                   completer.complete(null);
                 }
               }
             } else {
-              print('DaemonDetector: Unable to parse response format on port $port: $response');
               if (!completer.isCompleted) {
                 completer.complete(null);
               }
             }
           } catch (e) {
-            print('DaemonDetector: Error parsing version response on port $port: $e');
             if (!completer.isCompleted) {
               completer.complete(null);
             }
@@ -95,14 +85,12 @@ class DaemonDetector {
       });
 
       socket.onConnectError((error) {
-        print('DaemonDetector: Connection error on port $port: $error');
         if (!completer.isCompleted) {
           completer.complete(null);
         }
       });
 
       socket.onError((error) {
-        print('DaemonDetector: Socket error on port $port: $error');
         if (!completer.isCompleted) {
           completer.complete(null);
         }
@@ -111,7 +99,6 @@ class DaemonDetector {
       // Set a timeout for the entire operation
       Timer(_connectionTimeout, () {
         if (!completer.isCompleted) {
-          print('DaemonDetector: Timeout testing port $port');
           completer.complete(null);
         }
       });
@@ -125,7 +112,6 @@ class DaemonDetector {
       return result;
 
     } catch (e) {
-      print('DaemonDetector: Exception testing port $port: $e');
       return null;
     } finally {
       // Clean up socket
