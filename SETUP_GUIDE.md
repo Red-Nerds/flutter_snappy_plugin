@@ -1,328 +1,396 @@
-# Flutter SNAPPY Plugin Setup Guide
+# Flutter SNAPPY Plugin - Setup Guide
 
-This guide walks you through setting up the Flutter SNAPPY Plugin on Windows and Linux systems.
+This guide covers system-level setup and prerequisites for the Flutter SNAPPY Plugin.
 
-## Prerequisites
+## System Requirements
 
-- Flutter SDK 3.0+
-- Windows 11 or Linux system
-- SNAPPY device with USB connection
-- snappy_web_agent daemon installed and running
+- **Flutter SDK**: 3.0 or higher
+- **Operating System**: Windows 11 or Linux (Ubuntu 20.04+, other distributions)
+- **Hardware**: SNAPPY device with USB connection
+- **Network**: Available ports in range 8436-8535
 
-## Step 1: Install snappy_web_agent Daemon
+## Prerequisites Setup
 
-The Flutter plugin communicates with SNAPPY devices through the `snappy_web_agent` daemon.
+### 1. SNAPPY Web Agent Daemon
 
-### Windows Installation
+The Flutter plugin communicates with SNAPPY devices through the `snappy_web_agent` daemon, which handles all USB/serial communication.
 
-1. **Download snappy_web_agent**:
-    - Get the Windows MSI installer: `snappy-web-agent-*-setup.msi`
-    - Run as Administrator to install
+#### Windows Setup
 
-2. **Verify Installation**:
-   ```cmd
-   # Check if service is running
-   sc query "Snappy Web Agent"
-   
-   # Check listening ports
-   netstat -an | findstr 843
-   ```
-
-3. **Manual Start** (if needed):
-   ```cmd
-   # Start service
-   sc start "Snappy Web Agent"
-   ```
-
-### Linux Installation
-
-1. **Download snappy_web_agent**:
-    - Get the Debian package: `snappy-web-agent_*.deb`
-    - Install: `sudo dpkg -i snappy-web-agent_*.deb`
-
-2. **Setup udev rules** (for device access):
-   ```bash
-   # The package should install udev rules automatically
-   # If not, manually copy rules:
-   sudo cp /opt/snappy-web-agent/99-snappy-web-agent.rules /etc/udev/rules.d/
-   sudo udevadm control --reload-rules
-   sudo udevadm trigger
-   
-   # Add user to dialout group
-   sudo usermod -a -G dialout $USER
-   # Log out and back in for group changes
-   ```
-
-3. **Verify Installation**:
-   ```bash
-   # Check if service is running
-   systemctl status snappy-web-agent
-   
-   # Check listening ports
-   netstat -ln | grep 843
-   
-   # Check device access
-   lsusb | grep "b1b0:5508"
-   ```
-
-## Step 2: Setup Flutter Project
-
-### 1. Extract Plugin
-
-Extract the `flutter_snappy_plugin.zip` to your project directory:
-
-```
-your_project/
-├── lib/
-├── flutter_snappy_plugin/    # <- Extracted plugin
-│   ├── lib/
-│   ├── pubspec.yaml
-│   └── README.md
-└── pubspec.yaml
-```
-
-### 2. Update pubspec.yaml
-
-Add the plugin to your `pubspec.yaml`:
-
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  flutter_snappy_plugin:
-    path: ./flutter_snappy_plugin
-```
-
-### 3. Install Dependencies
-
+**Step 1: Download and Install**
 ```bash
-flutter packages get
+# Download the Windows MSI installer
+# snappy-web-agent-[version]-setup.msi
+
+# Run as Administrator
+Right-click → "Run as administrator"
 ```
 
-## Step 3: Basic Implementation
-
-### 1. Import Plugin
-
-```dart
-import 'package:flutter_snappy_plugin/flutter_snappy_plugin.dart';
-```
-
-### 2. Initialize Plugin
-
-```dart
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  final FlutterSnappyPlugin _plugin = FlutterSnappyPlugin.instance;
-  String _status = 'Disconnected';
-  
-  @override
-  void initState() {
-    super.initState();
-    _initializePlugin();
-  }
-  
-  Future<void> _initializePlugin() async {
-    // Check platform support
-    if (!_plugin.isPlatformSupported) {
-      setState(() => _status = 'Platform not supported');
-      return;
-    }
-    
-    // Connect to daemon
-    final connectResult = await _plugin.connect();
-    if (connectResult.success) {
-      setState(() => _status = 'Connected: ${connectResult.message}');
-      
-      // Setup data stream
-      _plugin.dataStream.listen((data) {
-        print('Received data: ${data.value} from ${data.mac}');
-      });
-      
-      // Start data collection
-      final startResult = await _plugin.startDataCollection();
-      if (startResult.success) {
-        print('Data collection started');
-      }
-    } else {
-      setState(() => _status = 'Connection failed: ${connectResult.error}');
-    }
-  }
-}
-```
-
-## Step 4: Testing Setup
-
-### 1. Run Example App
-
-Use the included example app to test your setup:
-
-```bash
-cd flutter_snappy_plugin/example
-flutter run -d windows  # or -d linux
-```
-
-### 2. Test Connection
-
-The example app should show:
-- ✅ Platform detected (Windows/Linux)
-- ✅ Service Connected (if daemon is running)
-- ✅ Device Connected (if SNAPPY device is plugged in)
-
-### 3. Test Data Collection
-
-1. Click "Start Collection" in the example app
-2. Interact with your SNAPPY device
-3. Data should appear in the "Data History" section
-
-## Troubleshooting
-
-### Common Issues
-
-#### 1. "DAEMON_NOT_FOUND" Error
-
-**Problem**: Plugin can't find snappy_web_agent daemon
-
-**Solutions**:
-- Verify daemon is installed and running
-- Check if daemon is listening on ports 8436-8535:
-  ```bash
-  # Windows
-  netstat -an | findstr 843
-  
-  # Linux  
-  netstat -ln | grep 843
-  ```
-- Restart the daemon service
-
-#### 2. "CONNECTION_FAILED" Error
-
-**Problem**: Plugin found daemon but can't connect
-
-**Solutions**:
-- Check firewall settings (allow ports 8436-8535)
-- Verify daemon is not blocked by antivirus
-- Try connecting manually to test port:
-  ```bash
-  telnet localhost 8436
-  ```
-
-#### 3. Device Not Detected
-
-**Problem**: No device connection events received
-
-**Solutions**:
-- Verify SNAPPY device is connected via USB
-- Check device VID/PID (should be 0xb1b0:0x5508)
-- On Linux, ensure udev rules are installed and user is in dialout group
-
-#### 4. No Data Received
-
-**Problem**: Device connected but no data in stream
-
-**Solutions**:
-- Ensure data collection is started
-- Check if device is sending data (interact with device)
-- Verify daemon logs for errors
-
-### Debug Commands
-
-#### Windows Debug
+**Step 2: Verify Installation**
 ```cmd
-# Check service status
+# Check if service is installed and running
 sc query "Snappy Web Agent"
 
-# View service logs (Event Viewer)
-eventvwr.msc
+# Should show:
+# SERVICE_NAME: Snappy Web Agent
+# STATE: 4 RUNNING
 
-# Test port connectivity
-telnet localhost 8436
+# Check listening ports
+netstat -an | findstr "843"
+
+# Should show something like:
+# TCP    127.0.0.1:8436    0.0.0.0:0    LISTENING
 ```
 
-#### Linux Debug
+**Step 3: Service Management**
+```cmd
+# Start service (if not running)
+sc start "Snappy Web Agent"
+
+# Stop service
+sc stop "Snappy Web Agent"
+
+# Restart service
+sc stop "Snappy Web Agent" && sc start "Snappy Web Agent"
+
+# Check service status
+sc query "Snappy Web Agent"
+```
+
+**Step 4: Windows Firewall**
+```cmd
+# The installer should automatically add firewall rules
+# If needed, manually allow the service:
+netsh advfirewall firewall add rule name="Snappy Web Agent" dir=in action=allow protocol=TCP localport=8436-8535
+```
+
+#### Linux Setup
+
+**Step 1: Download and Install**
+```bash
+# Ubuntu/Debian
+wget https://releases.example.com/snappy-web-agent_[version]_amd64.deb
+sudo dpkg -i snappy-web-agent_[version]_amd64.deb
+
+# CentOS/RHEL/Fedora
+sudo rpm -i snappy-web-agent-[version].x86_64.rpm
+```
+
+**Step 2: Device Access Setup**
+```bash
+# Add udev rules for SNAPPY device access
+sudo tee /etc/udev/rules.d/99-snappy-web-agent.rules << EOF
+# SNAPPY Device Rules
+SUBSYSTEM=="usb", ATTRS{idVendor}=="b1b0", ATTRS{idProduct}=="5508", MODE="0666", GROUP="dialout"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="b1b0", ATTRS{idProduct}=="5508", MODE="0666", GROUP="dialout"
+EOF
+
+# Reload udev rules
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+
+# Add current user to dialout group
+sudo usermod -a -G dialout $USER
+
+# Log out and back in for group changes to take effect
+```
+
+**Step 3: Service Setup**
+```bash
+# Create systemd service file
+sudo tee /etc/systemd/system/snappy-web-agent.service << EOF
+[Unit]
+Description=Snappy Web Agent Daemon
+After=network.target
+
+[Service]
+Type=simple
+User=snappy
+Group=snappy
+ExecStart=/usr/local/bin/snappy-web-agent
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Create service user
+sudo useradd -r -s /bin/false snappy
+
+# Enable and start service
+sudo systemctl daemon-reload
+sudo systemctl enable snappy-web-agent.service
+sudo systemctl start snappy-web-agent.service
+```
+
+**Step 4: Verify Linux Installation**
 ```bash
 # Check service status
-systemctl status snappy-web-agent
+systemctl status snappy-web-agent.service
 
-# View service logs
-journalctl -u snappy-web-agent -f
+# Check listening ports
+netstat -ln | grep "843"
+# Or with ss:
+ss -ln | grep "843"
+
+# Check logs
+journalctl -u snappy-web-agent.service -f
+
+# Test device detection
+lsusb | grep -i "b1b0:5508"
 
 # Check device permissions
-ls -la /dev/tty* | grep dialout
-
-# Test port connectivity  
-nc -zv localhost 8436
+ls -la /dev/ttyACM* /dev/ttyUSB* 2>/dev/null | grep dialout
 ```
 
-## Advanced Configuration
+### 2. SNAPPY Device Setup
 
-### Custom Port Detection
+**Hardware Requirements**
+- SNAPPY remote device
+- USB cable (device-specific)
+- Device must have VID: `0xb1b0` and PID: `0x5508`
 
-If you need to specify a custom port range:
+**Connection Steps**
+1. **Power on** your SNAPPY device
+2. **Connect via USB** to your computer
+3. **Wait for detection** (usually 5-10 seconds)
+4. **Verify detection** using system tools
 
-```dart
-// This requires modifying daemon_detector.dart
-// Or contact support for custom port configuration
+**Device Verification**
+
+Windows:
+```cmd
+# Check Device Manager
+devmgmt.msc
+
+# Look for "Snappy Device" under "Ports (COM & LPT)" or "Universal Serial Bus devices"
+
+# Using PowerShell
+Get-PnpDevice | Where-Object {$_.InstanceId -like "*VID_B1B0&PID_5508*"}
 ```
 
-### Multiple Device Support
+Linux:
+```bash
+# Check USB devices
+lsusb | grep "b1b0:5508"
 
-The plugin automatically handles multiple devices connected to the same daemon:
+# Check dmesg for device messages
+dmesg | grep -i snappy
 
-```dart
-_plugin.dataStream.listen((data) {
-  print('Device ${data.mac}: value=${data.value}, pid=${data.pid}');
-  
-  // Handle different devices based on MAC or PID
-  switch(data.mac) {
-    case '0c:ca:d2:88:19:70':
-      handleDevice1(data);
-      break;
-    case '0c:ca:d2:88:19:71':  
-      handleDevice2(data);
-      break;
-  }
-});
+# Check serial devices
+ls -la /dev/tty* | grep -E "(ACM|USB)"
+
+# Test device access
+sudo chmod 666 /dev/ttyACM0  # Replace with actual device
+echo "test" > /dev/ttyACM0    # Should not give permission error
 ```
 
-### Error Monitoring
+## Network Configuration
 
-Set up comprehensive error handling:
+### Port Requirements
+The snappy_web_agent daemon uses ports **8436-8535** for communication:
+- **8436**: Primary port (most common)
+- **8437-8535**: Fallback ports if primary is busy
 
-```dart
-// Monitor connection status
-_plugin.isConnected.listen((connected) {
-  if (!connected) {
-    // Handle disconnection
-    _showReconnectDialog();
-  }
-});
+### Firewall Configuration
 
-// Monitor for plugin exceptions
-try {
-  await _plugin.connect();
-} catch (e) {
-  if (e is SnappyPluginException) {
-    _handlePluginError(e);
-  }
+**Windows Firewall:**
+```cmd
+# Allow port range for snappy_web_agent
+netsh advfirewall firewall add rule name="Snappy Web Agent Ports" dir=in action=allow protocol=TCP localport=8436-8535
+```
+
+**Linux iptables:**
+```bash
+# Allow incoming connections on daemon ports
+sudo iptables -A INPUT -p tcp --dport 8436:8535 -j ACCEPT
+
+# Save rules (Ubuntu/Debian)
+sudo iptables-save > /etc/iptables/rules.v4
+
+# For firewalld (CentOS/RHEL)
+sudo firewall-cmd --permanent --add-port=8436-8535/tcp
+sudo firewall-cmd --reload
+```
+
+### Network Testing
+```bash
+# Test daemon connectivity
+curl -i http://localhost:8436/socket.io/
+# Should return HTTP response, not connection refused
+
+# Test specific port
+telnet localhost 8436
+# Should connect successfully
+
+# Scan for active daemon ports
+nmap -p 8436-8445 localhost
+```
+
+## Troubleshooting Setup Issues
+
+### Common Windows Issues
+
+**Service Won't Start:**
+```cmd
+# Check Windows Event Log
+eventvwr.msc
+# Navigate to Windows Logs → Application
+# Look for Snappy Web Agent errors
+
+# Try manual start
+"C:\Program Files\Snappy Web Agent\snappy-web-agent.exe"
+
+# Check dependencies
+sfc /scannow
+```
+
+**Device Not Detected:**
+```cmd
+# Update USB drivers
+# Device Manager → Right-click device → Update driver
+
+# Check USB power management
+# Device Manager → USB Root Hub → Properties → Power Management
+# Uncheck "Allow computer to turn off this device"
+```
+
+### Common Linux Issues
+
+**Permission Denied:**
+```bash
+# Check user groups
+groups $USER
+# Should include 'dialout'
+
+# If not in dialout group
+sudo usermod -a -G dialout $USER
+# Then log out and back in
+
+# Check device ownership
+ls -la /dev/ttyACM0
+# Should show group 'dialout'
+```
+
+**Service Fails to Start:**
+```bash
+# Check service logs
+journalctl -u snappy-web-agent.service --no-pager
+
+# Check binary permissions
+ls -la /usr/local/bin/snappy-web-agent
+chmod +x /usr/local/bin/snappy-web-agent
+
+# Test manual start
+sudo -u snappy /usr/local/bin/snappy-web-agent
+```
+
+**No Device Found:**
+```bash
+# Check USB subsystem
+lsusb -v | grep -A 10 -B 10 "b1b0"
+
+# Check kernel messages
+dmesg | tail -20
+
+# Reload USB drivers
+sudo modprobe -r usbserial
+sudo modprobe usbserial
+```
+
+## Validation Checklist
+
+Before using the Flutter plugin, verify:
+
+### System Validation
+- [ ] **Operating System**: Windows 11 or Linux
+- [ ] **Flutter SDK**: Version 3.0+ installed
+- [ ] **Network**: Ports 8436-8535 available
+- [ ] **Permissions**: User has device access rights
+
+### Daemon Validation
+- [ ] **Service Running**: snappy_web_agent service active
+- [ ] **Port Listening**: Daemon listening on 8436-8535 range
+- [ ] **Version Check**: Daemon responds to version requests
+- [ ] **Logs Clean**: No error messages in daemon logs
+
+### Device Validation
+- [ ] **Hardware Connected**: SNAPPY device plugged in via USB
+- [ ] **Device Detected**: System recognizes device (VID/PID correct)
+- [ ] **Permissions**: User can access device file/port
+- [ ] **Communication**: Daemon can communicate with device
+
+### Network Validation
+- [ ] **Firewall**: Ports not blocked by firewall
+- [ ] **Connectivity**: Can connect to http://localhost:8436
+- [ ] **Socket.IO**: Daemon responds to Socket.IO requests
+- [ ] **No Conflicts**: No other services using same ports
+
+### Quick Validation Script
+
+**Windows (PowerShell):**
+```powershell
+# Quick validation script
+Write-Host "=== Snappy Web Agent Validation ==="
+
+# Check service
+$service = Get-Service "Snappy Web Agent" -ErrorAction SilentlyContinue
+if ($service -and $service.Status -eq "Running") {
+    Write-Host "✓ Service is running"
+} else {
+    Write-Host "✗ Service not running"
+}
+
+# Check port
+$port = Test-NetConnection -ComputerName localhost -Port 8436 -WarningAction SilentlyContinue
+if ($port.TcpTestSucceeded) {
+    Write-Host "✓ Port 8436 is listening"
+} else {
+    Write-Host "✗ Port 8436 not accessible"
+}
+
+# Check device
+$device = Get-PnpDevice | Where-Object {$_.InstanceId -like "*VID_B1B0&PID_5508*"}
+if ($device) {
+    Write-Host "✓ SNAPPY device detected"
+} else {
+    Write-Host "✗ SNAPPY device not found"
 }
 ```
 
-## Next Steps
+**Linux (Bash):**
+```bash
+#!/bin/bash
+echo "=== Snappy Web Agent Validation ==="
 
-1. **Test thoroughly** with your specific SNAPPY devices
-2. **Implement error handling** appropriate for your use case
-3. **Monitor performance** with multiple devices
-4. **Prepare for Android support** when available
+# Check service
+if systemctl is-active --quiet snappy-web-agent.service; then
+    echo "✓ Service is running"
+else
+    echo "✗ Service not running"
+fi
 
-## Support
+# Check port
+if nc -z localhost 8436 2>/dev/null; then
+    echo "✓ Port 8436 is listening"
+else
+    echo "✗ Port 8436 not accessible"
+fi
 
-If you encounter issues not covered in this guide:
+# Check device
+if lsusb | grep -q "b1b0:5508"; then
+    echo "✓ SNAPPY device detected"
+else
+    echo "✗ SNAPPY device not found"
+fi
 
-1. Check the main README.md for additional troubleshooting
-2. Review the example app implementation
-3. Ensure snappy_web_agent daemon is properly installed
-4. Contact support with specific error messages and system info
+# Check permissions
+if groups $USER | grep -q dialout; then
+    echo "✓ User has device permissions"
+else
+    echo "✗ User not in dialout group"
+fi
+```
+
+Once all validations pass, you're ready to proceed with the Flutter plugin integration!

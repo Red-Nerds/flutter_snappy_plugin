@@ -27,10 +27,11 @@ export 'src/services/snappy_service.dart';
 
 // Internal imports
 import 'src/services/snappy_service.dart';
+import 'src/services/desktop_service.dart';
 import 'src/models/models.dart';
 
 /// Main Flutter SNAPPY Plugin class
-/// 
+///
 /// Provides a unified interface for SNAPPY device communication across platforms.
 /// Uses appropriate service implementation based on the current platform.
 class FlutterSnappyPlugin {
@@ -78,7 +79,7 @@ class FlutterSnappyPlugin {
   // Core connection and data methods
 
   /// Stream of connection status to the SNAPPY service
-  /// 
+  ///
   /// For Desktop: Connection to snappy_web_agent daemon
   /// For Android: Connection to remotesdk.aar
   Stream<bool> get isConnected {
@@ -87,7 +88,7 @@ class FlutterSnappyPlugin {
   }
 
   /// Stream of device connection status
-  /// 
+  ///
   /// Indicates if a physical SNAPPY device is connected and detected
   Stream<bool> get deviceConnected {
     _ensureInitialized();
@@ -95,7 +96,7 @@ class FlutterSnappyPlugin {
   }
 
   /// Stream of real-time data from SNAPPY devices
-  /// 
+  ///
   /// Emits [SnapData] objects containing:
   /// - mac: Device MAC address
   /// - value: Measured value
@@ -108,10 +109,10 @@ class FlutterSnappyPlugin {
   }
 
   /// Connect to the SNAPPY service
-  /// 
+  ///
   /// For Desktop: Detects and connects to snappy_web_agent daemon
   /// For Android: Initializes remotesdk.aar
-  /// 
+  ///
   /// Returns [PluginResponse] with connection result
   Future<PluginResponse> connect() async {
     _ensureInitialized();
@@ -119,69 +120,79 @@ class FlutterSnappyPlugin {
   }
 
   /// Start data collection from SNAPPY devices
-  /// 
-  /// Must be connected first. Starts streaming data to [dataStream]
+  ///
+  /// Must be connected first.
+  /// Returns [PluginResponse] with operation result
   Future<PluginResponse> startDataCollection() async {
     _ensureInitialized();
     return await _service!.startDataCollection();
   }
 
   /// Stop data collection from SNAPPY devices
-  /// 
-  /// Stops streaming data to [dataStream]
+  ///
+  /// Returns [PluginResponse] with operation result
   Future<PluginResponse> stopDataCollection() async {
     _ensureInitialized();
     return await _service!.stopDataCollection();
   }
 
-  /// Get service version
-  /// 
+  /// Get version of the underlying service
+  ///
   /// For Desktop: snappy_web_agent version
   /// For Android: remotesdk.aar version
+  ///
+  /// Returns [PluginResponse] with version in message field
   Future<PluginResponse> getVersion() async {
     _ensureInitialized();
     return await _service!.getVersion();
   }
 
-  /// Disconnect from the SNAPPY service
-  /// 
-  /// Cleans up all resources and connections
+  /// Disconnect from the service and cleanup resources
   Future<void> disconnect() async {
-    if (_service != null) {
-      await _service!.disconnect();
-    }
+    _ensureInitialized();
+    await _service!.disconnect();
   }
 
-  /// Check if SNAPPY service is available
-  /// 
-  /// For Desktop: Checks if snappy_web_agent daemon is running
-  /// For Android: Checks if BLE is available
+  /// Check if service is available
+  ///
+  /// For Desktop: Check if snappy_web_agent daemon is running
+  /// For Android: Check if BLE is available
   Future<bool> isServiceAvailable() async {
     _ensureInitialized();
     return await _service!.isServiceAvailable();
   }
 
-  // Platform information
+  /// Get current connection status synchronously
+  bool get isCurrentlyConnected {
+    _ensureInitialized();
+    return _service!.isCurrentlyConnected;
+  }
+
+  /// Get current device connection status synchronously
+  bool get isDeviceCurrentlyConnected {
+    _ensureInitialized();
+    return _service!.isDeviceCurrentlyConnected;
+  }
+
+  // Platform detection and utility methods
 
   /// Get current platform
   SnappyPlatform get currentPlatform => SnappyServiceFactory.getCurrentPlatform();
 
   /// Check if current platform is supported
-  bool get isPlatformSupported => currentPlatform != SnappyPlatform.unsupported;
+  bool get isPlatformSupported => SnappyServiceFactory.isPlatformSupported();
 
   /// Check if running on Android
-  bool get isAndroid => currentPlatform == SnappyPlatform.android;
+  bool get isAndroid => SnappyServiceFactory.isAndroid();
 
   /// Check if running on Desktop (Windows/Linux)
-  bool get isDesktop =>
-      currentPlatform == SnappyPlatform.windows ||
-          currentPlatform == SnappyPlatform.linux;
+  bool get isDesktop => SnappyServiceFactory.isDesktop();
 
-  // Android-specific methods (will be available when Android support is added)
+  // Android-specific methods (will throw UnimplementedError on other platforms)
 
-  /// Scan for available SNAPPY devices
-  /// 
-  /// **Android only** - Scans for BLE devices
+  /// Scan for available BLE devices
+  ///
+  /// **Android only** - Scans for SNAPPY devices via Bluetooth LE
   /// Throws [UnimplementedError] on other platforms
   Stream<DeviceInfo> scanForDevices() {
     _ensureInitialized();
@@ -189,8 +200,8 @@ class FlutterSnappyPlugin {
   }
 
   /// Pair with a BLE device
-  /// 
-  /// **Android only** - Pairs with a SNAPPY BLE device
+  ///
+  /// **Android only** - Pairs with discovered SNAPPY device
   /// Throws [UnimplementedError] on other platforms
   Future<PairingResult> pairRemote(String setName, String mac, int manufacturerId) {
     _ensureInitialized();
@@ -198,8 +209,8 @@ class FlutterSnappyPlugin {
   }
 
   /// Unpair a BLE device
-  /// 
-  /// **Android only** - Unpairs a SNAPPY BLE device
+  ///
+  /// **Android only** - Unpairs previously paired device
   /// Throws [UnimplementedError] on other platforms
   Future<bool> unpairRemote(String setName, int remoteId, {bool shiftSequence = false}) {
     _ensureInitialized();
@@ -207,8 +218,8 @@ class FlutterSnappyPlugin {
   }
 
   /// Scan for button presses from paired remotes
-  /// 
-  /// **Android only** - Monitors button presses from paired BLE devices
+  ///
+  /// **Android only** - Listens for button press data from paired devices
   /// Throws [UnimplementedError] on other platforms
   Stream<AnswerData> scanAnswers(String setName, {int? remoteId}) {
     _ensureInitialized();
@@ -216,7 +227,7 @@ class FlutterSnappyPlugin {
   }
 
   /// Upload encrypted device set
-  /// 
+  ///
   /// **Android only** - Uploads and decrypts device set data
   /// Throws [UnimplementedError] on other platforms
   Future<UploadStatus> uploadSet(File file, {String? setName}) {
@@ -225,7 +236,7 @@ class FlutterSnappyPlugin {
   }
 
   /// Save device list
-  /// 
+  ///
   /// **Android only** - Saves discovered device list
   /// Throws [UnimplementedError] on other platforms
   Future<bool> saveDeviceList(String listName, List<DeviceInfo> devices) {
@@ -234,7 +245,7 @@ class FlutterSnappyPlugin {
   }
 
   /// Load saved device list
-  /// 
+  ///
   /// **Android only** - Loads previously saved device list
   /// Throws [UnimplementedError] on other platforms
   Future<List<DeviceInfo>?> loadDeviceList(String listName) {
@@ -243,7 +254,7 @@ class FlutterSnappyPlugin {
   }
 
   /// Get saved device list names
-  /// 
+  ///
   /// **Android only** - Gets all saved device list names
   /// Throws [UnimplementedError] on other platforms
   Future<List<String>> getSavedDeviceListNames() {
@@ -251,15 +262,31 @@ class FlutterSnappyPlugin {
     return _service!.getSavedDeviceListNames();
   }
 
+  // Advanced methods for testing and diagnostics
+
+  /// Test connection without full connect (for diagnostics)
+  ///
+  /// **Desktop only** - Provides detailed connection testing results
+  /// Returns diagnostic information about daemon detection and connectivity
+  Future<Map<String, dynamic>> testConnection() async {
+    _ensureInitialized();
+
+    if (_service is DesktopSnappyService) {
+      return await (_service as DesktopSnappyService).testConnection();
+    } else {
+      throw UnimplementedError('testConnection is only available on Desktop platforms');
+    }
+  }
+
   // Utility methods
 
   /// Dispose all resources
-  /// 
+  ///
   /// Call this when the plugin is no longer needed
   Future<void> dispose() async {
-    await disconnect();
-    if (_service != null && _service is DesktopSnappyService) {
-      await (_service as DesktopSnappyService).dispose();
+    if (_service != null) {
+      await disconnect();
+      await _service!.dispose();
     }
     _service = null;
     _isInitialized = false;

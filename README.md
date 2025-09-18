@@ -1,14 +1,10 @@
-# Flutter SNAPPY Plugin
+# flutter_snappy_plugin
 
-A Flutter plugin for SNAPPY remote device communication supporting Windows, Linux, and Android platforms.
+A Flutter plugin for SNAPPY remote device communication supporting Windows and Linux platforms.
 
-## Features
-
-- **Cross-Platform Support**: Windows, Linux, and Android (Android coming soon)
-- **Real-Time Data**: Stream live data from SNAPPY devices
-- **Automatic Detection**: Auto-detects and connects to snappy_web_agent daemon on desktop
-- **Error Handling**: Comprehensive error handling with clear messages
-- **Easy Integration**: Simple API that works consistently across platforms
+[![pub package](https://img.shields.io/pub/v/flutter_snappy_plugin.svg)](https://pub.dartlang.org/packages/flutter_snappy_plugin)
+[![Platform Support](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue.svg)](https://flutter.dev/desktop)
+[![Flutter](https://img.shields.io/badge/Flutter-3.0+-blue.svg)](https://flutter.dev)
 
 ## Platform Support
 
@@ -18,294 +14,161 @@ A Flutter plugin for SNAPPY remote device communication supporting Windows, Linu
 | Linux    | ✅ Ready | Socket.IO → snappy_web_agent | snappy_web_agent daemon |
 | Android  | 🚧 Coming Soon | BLE → remotesdk.aar | BLE-enabled device |
 
-## Installation
+## Features
 
-### 1. Add to pubspec.yaml
-
-Since this plugin is distributed as a zip file, extract it to your project and add:
-
-```yaml
-dependencies:
-  flutter_snappy_plugin:
-    path: ./flutter_snappy_plugin  # Path to extracted plugin
-```
-
-### 2. Platform-Specific Setup
-
-#### Windows/Linux Requirements
-
-1. **Install snappy_web_agent daemon**:
-    - Download and install the snappy_web_agent service
-    - Ensure it's running and accessible on ports 8436-8535
-    - The daemon handles all USB/serial device communication
-
-2. **Device Setup**:
-    - Connect SNAPPY device via USB
-    - Ensure device has VID: `0xb1b0` and PID: `0x5508`
-
-#### Android Requirements (Coming Soon)
-
-1. **Add permissions** to `android/app/src/main/AndroidManifest.xml`:
-```xml
-<uses-permission android:name="android.permission.BLUETOOTH" />
-<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-```
-
-2. **Enable BLE** on target device
+- **Real-time Data Streaming** - Live data from SNAPPY devices
+- **Automatic Daemon Detection** - Finds and connects to snappy_web_agent on ports 8436-8535
+- **Device Connection Monitoring** - Automatic device status detection and reconnection
+- **Cross-Platform API** - Unified interface across Windows and Linux
+- **Error Recovery** - Comprehensive error handling with automatic reconnection
+- **Lightweight** - Minimal dependencies, efficient Socket.IO communication
 
 ## Quick Start
 
-### Basic Usage
+### 1. Add Dependency
+
+```yaml
+dependencies:
+  flutter_snappy_plugin: ^1.0.0-beta.1
+```
+
+### 2. Basic Usage
 
 ```dart
 import 'package:flutter_snappy_plugin/flutter_snappy_plugin.dart';
 
-class SnappyExample extends StatefulWidget {
+class MyApp extends StatefulWidget {
   @override
-  _SnappyExampleState createState() => _SnappyExampleState();
+  _MyAppState createState() => _MyAppState();
 }
 
-class _SnappyExampleState extends State<SnappyExample> {
-  final FlutterSnappyPlugin _plugin = FlutterSnappyPlugin.instance;
-  
+class _MyAppState extends State<MyApp> {
+  final plugin = FlutterSnappyPlugin.instance;
+
   @override
   void initState() {
     super.initState();
     _initializeSnappy();
   }
-  
+
   Future<void> _initializeSnappy() async {
-    // Connect to service
-    final connectResult = await _plugin.connect();
+    // Connect to snappy_web_agent daemon
+    final connectResult = await plugin.connect();
     if (!connectResult.success) {
       print('Connection failed: ${connectResult.error}');
       return;
     }
-    
+
+    // Listen to real-time data
+    plugin.dataStream.listen((data) {
+      print('📡 Value: ${data.value} from ${data.mac}');
+    });
+
+    // Monitor device connection
+    plugin.deviceConnected.listen((connected) {
+      print('🔌 Device: ${connected ? 'Connected' : 'Disconnected'}');
+    });
+
     // Start data collection
-    final startResult = await _plugin.startDataCollection();
-    if (startResult.success) {
-      print('Data collection started');
-    }
-    
-    // Listen to data stream
-    _plugin.dataStream.listen((data) {
-      print('Received: ${data.value} from ${data.mac} at ${data.timestamp}');
-    });
-    
-    // Monitor connection status
-    _plugin.isConnected.listen((connected) {
-      print('Connection status: ${connected ? 'Connected' : 'Disconnected'}');
-    });
-    
-    // Monitor device status  
-    _plugin.deviceConnected.listen((connected) {
-      print('Device status: ${connected ? 'Connected' : 'Disconnected'}');
-    });
+    await plugin.startDataCollection();
   }
-  
+
   @override
   void dispose() {
-    _plugin.disconnect();
+    plugin.disconnect();
     super.dispose();
   }
 }
 ```
 
-### Complete Example
+### 3. Connection Status Monitoring
 
 ```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_snappy_plugin/flutter_snappy_plugin.dart';
+StreamBuilder<bool>(
+  stream: plugin.isConnected,
+  builder: (context, snapshot) {
+    final connected = snapshot.data ?? false;
+    return ListTile(
+      leading: Icon(
+        connected ? Icons.cloud_done : Icons.cloud_off,
+        color: connected ? Colors.green : Colors.red,
+      ),
+      title: Text(connected ? 'Connected' : 'Disconnected'),
+      subtitle: Text('Service Status'),
+    );
+  },
+)
+```
 
-class SnappyDashboard extends StatefulWidget {
-  @override
-  _SnappyDashboardState createState() => _SnappyDashboardState();
-}
+### 4. Real-time Data Display
 
-class _SnappyDashboardState extends State<SnappyDashboard> {
-  final FlutterSnappyPlugin _plugin = FlutterSnappyPlugin.instance;
-  
-  String _status = 'Disconnected';
-  bool _isCollecting = false;
-  List<SnapData> _recentData = [];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('SNAPPY Dashboard')),
-      body: Column(
-        children: [
-          // Status Card
-          Card(
-            child: ListTile(
-              title: Text('Status: $_status'),
-              subtitle: Text('Platform: ${_plugin.currentPlatform.name}'),
-              trailing: Icon(
-                _plugin.isConnected != null ? Icons.check_circle : Icons.error,
-                color: Colors.green,
-              ),
-            ),
-          ),
-          
-          // Control Buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: _connect,
-                child: Text('Connect'),
-              ),
-              ElevatedButton(
-                onPressed: _isCollecting ? _stopCollection : _startCollection,
-                child: Text(_isCollecting ? 'Stop' : 'Start'),
-              ),
-            ],
-          ),
-          
-          // Data List
-          Expanded(
-            child: ListView.builder(
-              itemCount: _recentData.length,
-              itemBuilder: (context, index) {
-                final data = _recentData[index];
-                return ListTile(
-                  title: Text('Value: ${data.value}'),
-                  subtitle: Text('MAC: ${data.mac}'),
-                  trailing: Text(data.timestamp),
-                );
-              },
-            ),
-          ),
-        ],
+```dart
+StreamBuilder<SnapData>(
+  stream: plugin.dataStream,
+  builder: (context, snapshot) {
+    if (!snapshot.hasData) return Text('No data');
+    
+    final data = snapshot.data!;
+    return Card(
+      child: ListTile(
+        title: Text('Value: ${data.value}'),
+        subtitle: Text('MAC: ${data.mac}'),
+        trailing: Text('PID: ${data.pid}'),
       ),
     );
-  }
-
-  Future<void> _connect() async {
-    final result = await _plugin.connect();
-    setState(() {
-      _status = result.success ? 'Connected' : 'Failed: ${result.error}';
-    });
-  }
-
-  Future<void> _startCollection() async {
-    final result = await _plugin.startDataCollection();
-    setState(() {
-      _isCollecting = result.success;
-    });
-    
-    if (result.success) {
-      _plugin.dataStream.listen((data) {
-        setState(() {
-          _recentData.insert(0, data);
-          if (_recentData.length > 20) _recentData.removeLast();
-        });
-      });
-    }
-  }
-
-  Future<void> _stopCollection() async {
-    final result = await _plugin.stopDataCollection();
-    setState(() {
-      _isCollecting = !result.success;
-    });
-  }
-}
+  },
+)
 ```
 
 ## API Reference
 
 ### Core Methods
 
-#### `connect()`
-Connects to the SNAPPY service (daemon or AAR).
-
 ```dart
-Future<PluginResponse> connect()
-```
+// Connection Management
+Future<PluginResponse> connect();
+Future<void> disconnect();
+Future<bool> isServiceAvailable();
 
-**Returns**: `PluginResponse` with connection result
-- `success`: true if connected successfully
-- `message`: Success message or error description
-- `error`: Error code if failed
+// Data Collection
+Future<PluginResponse> startDataCollection();
+Future<PluginResponse> stopDataCollection();
+Future<PluginResponse> getVersion();
 
-#### `startDataCollection()`
-Starts collecting data from SNAPPY devices.
-
-```dart
-Future<PluginResponse> startDataCollection()
-```
-
-**Returns**: `PluginResponse` with operation result
-
-#### `stopDataCollection()`
-Stops collecting data from SNAPPY devices.
-
-```dart
-Future<PluginResponse> stopDataCollection()
-```
-
-**Returns**: `PluginResponse` with operation result
-
-#### `getVersion()`
-Gets the version of the underlying service.
-
-```dart
-Future<PluginResponse> getVersion()
-```
-
-**Returns**: `PluginResponse` with version in `message` field
-
-#### `disconnect()`
-Disconnects from the service and cleans up resources.
-
-```dart
-Future<void> disconnect()
+// Platform Information
+SnappyPlatform get currentPlatform;  // windows, linux, android, unsupported
+bool get isPlatformSupported;
+bool get isDesktop;  // Windows or Linux
+bool get isAndroid;  // Android
 ```
 
 ### Streams
 
-#### `isConnected`
-Stream of connection status to the SNAPPY service.
-
 ```dart
-Stream<bool> get isConnected
-```
+// Service connection status
+Stream<bool> get isConnected;
 
-#### `deviceConnected`
-Stream of physical device connection status.
+// Physical device connection status
+Stream<bool> get deviceConnected;
 
-```dart
-Stream<bool> get deviceConnected
-```
-
-#### `dataStream`
-Stream of real-time data from SNAPPY devices.
-
-```dart
-Stream<SnapData> get dataStream
+// Real-time data from SNAPPY devices
+Stream<SnapData> get dataStream;
 ```
 
 ### Data Models
 
-#### `SnapData`
-Real-time data from SNAPPY devices.
-
+#### SnapData
 ```dart
 class SnapData {
   final String mac;        // Device MAC address
   final int value;         // Measured value
-  final String timestamp;  // UTC timestamp (RFC 3339)
-  final int? pid;          // Product ID (Desktop only)
-  final int? remoteId;     // Remote ID (Android only)
+  final String timestamp;  // UTC timestamp (ISO 8601)
+  final int? pid;          // Product ID (desktop only)
+  final int? remoteId;     // Remote ID (Android only - future)
 }
 ```
 
-#### `PluginResponse`
-Response format for plugin operations.
-
+#### PluginResponse
 ```dart
 class PluginResponse {
   final bool success;      // Operation success status
@@ -315,141 +178,93 @@ class PluginResponse {
 }
 ```
 
-#### `DeviceInfo`
-Information about discovered devices.
-
-```dart
-class DeviceInfo {
-  final String name;           // Device name
-  final String mac;            // Device MAC address  
-  final int? manufacturerId;   // Manufacturer ID
-}
-```
-
-### Platform Information
-
-#### `currentPlatform`
-Get the current platform.
-
-```dart
-SnappyPlatform get currentPlatform
-```
-
-**Values**: `SnappyPlatform.windows`, `SnappyPlatform.linux`, `SnappyPlatform.android`, `SnappyPlatform.unsupported`
-
-#### `isPlatformSupported`
-Check if current platform is supported.
-
-```dart
-bool get isPlatformSupported
-```
-
-#### `isDesktop` / `isAndroid`
-Platform-specific checks.
-
-```dart
-bool get isDesktop  // Windows or Linux
-bool get isAndroid  // Android
-```
-
 ## Error Handling
 
-The plugin provides comprehensive error handling through `PluginResponse` objects and exceptions.
-
-### Common Error Codes
-
-| Error Code | Description | Solution |
-|-----------|-------------|----------|
-| `DAEMON_NOT_FOUND` | snappy_web_agent daemon not running | Install and start the daemon |
-| `CONNECTION_FAILED` | Failed to connect to daemon | Check daemon status and ports |
-| `NOT_CONNECTED` | Operation requires connection | Call `connect()` first |
-| `UNSUPPORTED_PLATFORM` | Platform not supported | Use Windows, Linux, or Android |
-| `SERVICE_DISPOSED` | Service has been disposed | Create new plugin instance |
-
-### Error Handling Example
+The plugin provides comprehensive error handling:
 
 ```dart
-try {
-  final result = await plugin.connect();
-  if (!result.success) {
-    switch (result.error) {
-      case 'DAEMON_NOT_FOUND':
-        showError('Please install and run snappy_web_agent daemon');
-        break;
-      case 'CONNECTION_FAILED':
-        showError('Connection failed. Check daemon status.');
-        break;
-      default:
-        showError('Connection error: ${result.message}');
-    }
-  }
-} catch (e) {
-  if (e is SnappyPluginException) {
-    showError('Plugin error: ${e.message}');
-  } else {
-    showError('Unexpected error: $e');
+final result = await plugin.connect();
+if (!result.success) {
+  switch (result.error) {
+    case 'DAEMON_NOT_FOUND':
+      print('snappy_web_agent daemon not running');
+      break;
+    case 'CONNECTION_FAILED':
+      print('Failed to connect to daemon');
+      break;
+    default:
+      print('Error: ${result.message}');
   }
 }
 ```
+
+## Examples
+
+### Complete Working App
+Check out the [example app](example/) for a complete implementation showing:
+- Platform detection and validation
+- Connection management with UI feedback
+- Real-time data streaming with history
+- Device status monitoring
+- Error handling and recovery
+- Professional UI integration
+
+### Running the Example
+```bash
+cd example
+flutter run -d windows  # or -d linux
+```
+
+## Requirements
+
+### System Requirements
+- Flutter SDK 3.0+
+- Windows 11 or Linux system
+- SNAPPY device with USB connection (VID: 0xb1b0, PID: 0x5508)
+
+### Runtime Dependencies
+- **snappy_web_agent daemon** - Must be installed and running
+- **Available ports** - 8436-8535 range for daemon communication
+- **USB permissions** - Device access permissions (Linux may require udev rules)
 
 ## Troubleshooting
 
-### Desktop (Windows/Linux)
+### Common Issues
 
-**Problem**: `DAEMON_NOT_FOUND` error
-- **Solution**: Install snappy_web_agent daemon and ensure it's running
-- **Check**: Run `netstat -an | grep 843` to see if daemon is listening on ports 8436-8535
+| Error | Description | Solution |
+|-------|-------------|----------|
+| `DAEMON_NOT_FOUND` | snappy_web_agent not running | Install and start daemon |
+| `CONNECTION_FAILED` | Can't connect to daemon | Check firewall, ports 8436-8535 |
+| `PLATFORM_UNSUPPORTED` | Unsupported platform | Use Windows or Linux |
+| No device detected | SNAPPY device not found | Check USB connection and permissions |
 
-**Problem**: Connection timeout
-- **Solution**: Check firewall settings, ensure ports 8436-8535 are accessible
-- **Check**: Verify daemon logs for errors
-
-**Problem**: No device detected
-- **Solution**: Ensure USB device is connected with correct VID/PID (0xb1b0:0x5508)
-- **Check**: On Linux, verify udev rules are installed for device access
-
-### Development
-
-**Problem**: Import errors
-- **Solution**: Run `flutter packages get` and ensure path is correct in `pubspec.yaml`
-
-**Problem**: Build errors
-- **Solution**: Run `flutter clean && flutter packages get`
-
-## Future Android Support
-
-When Android support is added, additional methods will become available:
-
-```dart
-// BLE Device scanning
-Stream<DeviceInfo> scanForDevices()
-
-// Device pairing
-Future<PairingResult> pairRemote(String setName, String mac, int manufacturerId)
-
-// Button press monitoring  
-Stream<AnswerData> scanAnswers(String setName, {int? remoteId})
-
-// Device management
-Future<bool> saveDeviceList(String listName, List<DeviceInfo> devices)
-Future<List<DeviceInfo>?> loadDeviceList(String listName)
+### Debug Information
+Enable verbose logging:
+```bash
+flutter run --verbose
 ```
+
+Look for debug output:
+```
+DaemonDetector: Found daemon at port 8436, version: 1.0.3-beta.1
+SocketIO: Connected successfully to http://localhost:8436
+```
+
+## Roadmap
+
+- ✅ **v1.0.0-beta.1** - Windows & Linux support via Socket.IO
+- 🚧 **v1.1.0** - Android BLE integration with remotesdk.aar
+- 🚧 **v1.2.0** - iOS support with daemon communication
+- 🚧 **v2.0.0** - Advanced analytics and data processing features
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make changes
-4. Add tests
-5. Submit a pull request
+Issues and pull requests are welcome! Please check the [issue tracker](https://github.com/Red-Nerds/flutter_snappy_plugin/issues) before submitting.
 
 ## License
 
-Copyright (c) Red Nerds. All rights reserved.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Support
+---
 
-For support and questions:
-- Check the troubleshooting section
-- Review the example app
-- Contact: [sahil@therednerds.com]
+**Made for SNAPPY remote device communication** 📡

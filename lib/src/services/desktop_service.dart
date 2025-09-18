@@ -50,6 +50,8 @@ class DesktopSnappyService extends SnappyService {
     }
 
     try {
+      print('DesktopService: Starting connection process');
+
       // Clean up any existing connections
       await _cleanupConnection();
 
@@ -66,19 +68,15 @@ class DesktopSnappyService extends SnappyService {
         );
       }
 
+      print('DesktopService: Found daemon at ${daemon.url}');
       _currentDaemon = daemon;
-      _emitConnectionStatus(false, 'Daemon found on port ${daemon.port}, connecting...');
 
-      // Create socket client
+      // Create socket client and connect
       _socketClient = SnappySocketClient(daemon.url);
-
-      // Set up stream forwarding before connecting
-      _setupStreamForwarding();
-
-      // Connect to daemon
       final connected = await _socketClient!.connect();
+
       if (!connected) {
-        _emitConnectionStatus(false, 'Connection failed');
+        _emitConnectionStatus(false, 'Failed to connect to daemon');
         return PluginResponse(
           success: false,
           message: 'Failed to connect to SNAPPY Web Agent daemon at ${daemon.url}',
@@ -87,20 +85,23 @@ class DesktopSnappyService extends SnappyService {
         );
       }
 
-      // Connection successful
-      _isConnected = true;
-      _emitConnectionStatus(true, 'Connected to daemon v${daemon.version}');
+      // Setup stream forwarding
+      _setupStreamForwarding();
 
-      // Start daemon monitoring
+      // Start monitoring
       _startDaemonMonitoring();
+
+      _isConnected = true;
+      _emitConnectionStatus(true, 'Connected to SNAPPY Web Agent v${daemon.version}');
 
       return PluginResponse(
         success: true,
-        message: 'Connected to SNAPPY Web Agent v${daemon.version} on port ${daemon.port}',
+        message: 'Connected to SNAPPY Web Agent v${daemon.version} at ${daemon.url}',
         command: 'connect',
       );
 
     } catch (e) {
+      print('DesktopService: Connection error: $e');
       _emitConnectionStatus(false, 'Connection error: ${e.toString()}');
       return PluginResponse(
         success: false,
@@ -116,23 +117,14 @@ class DesktopSnappyService extends SnappyService {
     if (!isCurrentlyConnected) {
       return PluginResponse(
         success: false,
-        message: 'Not connected to daemon. Call connect() first.',
+        message: 'Not connected to daemon',
         command: 'start-snappy',
         error: 'NOT_CONNECTED',
       );
     }
 
-    try {
-      final response = await _socketClient!.startDataCollection();
-      return response;
-    } catch (e) {
-      return PluginResponse(
-        success: false,
-        message: 'Start data collection failed: ${e.toString()}',
-        command: 'start-snappy',
-        error: 'START_FAILED',
-      );
-    }
+    print('DesktopService: Starting data collection');
+    return await _socketClient!.startDataCollection();
   }
 
   @override
@@ -140,23 +132,14 @@ class DesktopSnappyService extends SnappyService {
     if (!isCurrentlyConnected) {
       return PluginResponse(
         success: false,
-        message: 'Not connected to daemon. Call connect() first.',
+        message: 'Not connected to daemon',
         command: 'stop-snappy',
         error: 'NOT_CONNECTED',
       );
     }
 
-    try {
-      final response = await _socketClient!.stopDataCollection();
-      return response;
-    } catch (e) {
-      return PluginResponse(
-        success: false,
-        message: 'Stop data collection failed: ${e.toString()}',
-        command: 'stop-snappy',
-        error: 'STOP_FAILED',
-      );
-    }
+    print('DesktopService: Stopping data collection');
+    return await _socketClient!.stopDataCollection();
   }
 
   @override
@@ -164,28 +147,21 @@ class DesktopSnappyService extends SnappyService {
     if (!isCurrentlyConnected) {
       return PluginResponse(
         success: false,
-        message: 'Not connected to daemon. Call connect() first.',
+        message: 'Not connected to daemon',
         command: 'version',
         error: 'NOT_CONNECTED',
       );
     }
 
-    try {
-      final response = await _socketClient!.getVersion();
-      return response;
-    } catch (e) {
-      return PluginResponse(
-        success: false,
-        message: 'Get version failed: ${e.toString()}',
-        command: 'version',
-        error: 'VERSION_FAILED',
-      );
-    }
+    print('DesktopService: Getting version');
+    return await _socketClient!.getVersion();
   }
 
   @override
   Future<void> disconnect() async {
+    print('DesktopService: Disconnecting');
     await _cleanupConnection();
+    _isConnected = false;
     _emitConnectionStatus(false, 'Disconnected');
   }
 
@@ -195,6 +171,7 @@ class DesktopSnappyService extends SnappyService {
       final daemon = await DaemonDetector.detectDaemon();
       return daemon != null;
     } catch (e) {
+      print('DesktopService: Error checking service availability: $e');
       return false;
     }
   }
@@ -203,41 +180,54 @@ class DesktopSnappyService extends SnappyService {
   Future<void> dispose() async {
     if (_isDisposed) return;
 
+    print('DesktopService: Disposing');
     _isDisposed = true;
+
+    _monitorTimer?.cancel();
+    await _connectionSub?.cancel();
+    await _deviceSub?.cancel();
+    await _dataSub?.cancel();
+
     await _cleanupConnection();
 
-    // Close all stream controllers
     await _connectionController.close();
     await _deviceConnectionController.close();
     await _dataController.close();
   }
 
-  /// Clean up connection and resources
-  Future<void> _cleanupConnection() async {
-    _stopDaemonMonitoring();
+  /// Emit connection status to stream
+  void _emitConnectionStatus(bool connected, String message) {
+    print('DesktopService: Status update - Connected: $connected, Message: $message');
+    _isConnected = connected;
+    _connectionController.add(connected);
+  }
 
-    // Cancel stream subscriptions
+  /// Clean up current connection
+  Future<void> _cleanupConnection() async {
+    _monitorTimer?.cancel();
+    _monitorTimer = null;
+
     await _connectionSub?.cancel();
     await _deviceSub?.cancel();
     await _dataSub?.cancel();
+
     _connectionSub = null;
     _deviceSub = null;
     _dataSub = null;
 
-    // Dispose socket client
     if (_socketClient != null) {
       await _socketClient!.dispose();
       _socketClient = null;
     }
 
     _currentDaemon = null;
-    _isConnected = false;
-    _deviceConnected = false;
   }
 
   /// Setup stream forwarding from socket client to service streams
   void _setupStreamForwarding() {
     if (_socketClient == null) return;
+
+    print('DesktopService: Setting up stream forwarding');
 
     // Forward connection status
     _connectionSub = _socketClient!.connectionStream.listen(
@@ -246,11 +236,10 @@ class DesktopSnappyService extends SnappyService {
         _connectionController.add(connected);
       },
       onError: (error) {
-        _isConnected = false;
-        _connectionController.add(false);
+        print('DesktopService: Connection stream error: $error');
         _connectionController.addError(SnappyPluginException(
-          'Connection error: ${error.toString()}',
-          code: 'CONNECTION_ERROR',
+          'Connection stream error: ${error.toString()}',
+          code: 'CONNECTION_STREAM_ERROR',
           originalError: error,
         ));
       },
@@ -259,10 +248,12 @@ class DesktopSnappyService extends SnappyService {
     // Forward device connection events
     _deviceSub = _socketClient!.deviceConnectionStream.listen(
           (event) {
+        print('DesktopService: Device event received: ${event.toString()}');
         _deviceConnected = event.isConnected;
         _deviceConnectionController.add(event.isConnected);
       },
       onError: (error) {
+        print('DesktopService: Device stream error: $error');
         _deviceConnectionController.addError(SnappyPluginException(
           'Device connection error: ${error.toString()}',
           code: 'DEVICE_ERROR',
@@ -274,9 +265,11 @@ class DesktopSnappyService extends SnappyService {
     // Forward snap data
     _dataSub = _socketClient!.dataStream.listen(
           (data) {
+        print('DesktopService: Data received: ${data.toString()}');
         _dataController.add(data);
       },
       onError: (error) {
+        print('DesktopService: Data stream error: $error');
         _dataController.addError(SnappyPluginException(
           'Data stream error: ${error.toString()}',
           code: 'DATA_ERROR',
@@ -289,95 +282,37 @@ class DesktopSnappyService extends SnappyService {
   /// Start periodic daemon monitoring
   void _startDaemonMonitoring() {
     _monitorTimer?.cancel();
-    _monitorTimer = Timer.periodic(const Duration(seconds: 15), (timer) async {
+    _monitorTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
       if (_isDisposed) {
         timer.cancel();
         return;
       }
 
       // Check if current daemon is still available
-      if (_currentDaemon != null && isCurrentlyConnected) {
+      if (_currentDaemon != null && !isCurrentlyConnected) {
+        print('DesktopService: Connection lost, attempting to reconnect');
+
+        // Try to reconnect
         final stillAvailable = await _testDaemonAvailability(_currentDaemon!);
-        if (!stillAvailable) {
-          // Daemon is no longer available, try to reconnect
-          await _handleDaemonLost();
+        if (stillAvailable && _socketClient != null) {
+          final reconnected = await _socketClient!.connect();
+          if (reconnected) {
+            print('DesktopService: Reconnected successfully');
+            _isConnected = true;
+            _connectionController.add(true);
+          }
         }
       }
     });
   }
 
-  /// Stop daemon monitoring
-  void _stopDaemonMonitoring() {
-    _monitorTimer?.cancel();
-    _monitorTimer = null;
-  }
-
   /// Test if daemon is still available
   Future<bool> _testDaemonAvailability(DaemonInfo daemon) async {
     try {
-      // Simple connectivity test - try to create a quick connection
-      final testClient = SnappySocketClient(daemon.url);
-      final connected = await testClient.connect();
-      if (connected) {
-        await testClient.dispose();
-        return true;
-      }
-      return false;
+      return await DaemonDetector.isPortOpen('localhost', daemon.port);
     } catch (e) {
       return false;
     }
-  }
-
-  /// Handle daemon loss and attempt reconnection
-  Future<void> _handleDaemonLost() async {
-    _emitConnectionStatus(false, 'Lost connection to daemon, attempting to reconnect...');
-
-    // Try to find daemon on same or different port
-    final newDaemon = await DaemonDetector.detectDaemon();
-    if (newDaemon != null) {
-      // Attempt reconnection
-      final result = await connect();
-      if (result.success) {
-        _emitConnectionStatus(true, 'Reconnected successfully');
-        return;
-      }
-    }
-
-    // Could not reconnect
-    _emitConnectionStatus(false, 'Could not reconnect to daemon');
-    _connectionController.addError(
-        SnappyPluginException(
-            'Lost connection to SNAPPY Web Agent daemon and could not reconnect',
-            code: 'DAEMON_LOST'
-        )
-    );
-  }
-
-  /// Emit connection status to stream with optional message
-  void _emitConnectionStatus(bool connected, String message) {
-    _isConnected = connected;
-    _connectionController.add(connected);
-
-    // You could also emit status messages if needed
-    // This is useful for debugging or showing detailed status to users
-  }
-
-  /// Get daemon information
-  DaemonInfo? get currentDaemon => _currentDaemon;
-
-  /// Get detailed connection status
-  Map<String, dynamic> getConnectionStatus() {
-    return {
-      'isConnected': isCurrentlyConnected,
-      'isDeviceConnected': isDeviceCurrentlyConnected,
-      'daemon': _currentDaemon != null ? {
-        'url': _currentDaemon!.url,
-        'port': _currentDaemon!.port,
-        'version': _currentDaemon!.version,
-        'detectedAt': _currentDaemon!.detectedAt.toIso8601String(),
-      } : null,
-      'socketConnected': _socketClient?.isConnected ?? false,
-    };
   }
 
   /// Test connection without full connect (for diagnostics)
@@ -385,6 +320,8 @@ class DesktopSnappyService extends SnappyService {
     final results = <String, dynamic>{};
 
     try {
+      print('DesktopService: Running connection diagnostics');
+
       // Test daemon detection
       final detectStart = DateTime.now();
       final daemon = await DaemonDetector.detectDaemon();
@@ -427,6 +364,10 @@ class DesktopSnappyService extends SnappyService {
 
         await testClient.dispose();
       }
+
+      // Test port availability
+      final availablePorts = await DaemonDetector.getAvailablePorts();
+      results['availablePorts'] = availablePorts;
 
     } catch (e) {
       results['error'] = e.toString();
