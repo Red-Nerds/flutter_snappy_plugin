@@ -1,6 +1,6 @@
 name: flutter_snappy_plugin
 description: Flutter plugin for SNAPPY remote device communication on Windows and Linux platforms.
-version: 1.0.0-beta.1
+version: 1.1.0
 homepage: https://github.com/Red-Nerds/flutter_snappy_plugin
 repository: https://github.com/Red-Nerds/flutter_snappy_plugin
 issue_tracker: https://github.com/Red-Nerds/flutter_snappy_plugin/issues
@@ -29,5 +29,7 @@ flutter:
       windows:
         dartPluginClass: FlutterSnappyPlugin
       linux:
+        dartPluginClass: FlutterSnappyPlugin
+      macos:
         dartPluginClass: FlutterSnappyPlugin
       # Android will be added later
