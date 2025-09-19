@@ -1,3 +1,14 @@
+## 1.0.1
+
+* Added web platform support via Socket.IO communication
+* Fixed Platform detection error on web browsers
+* Fixed switch case handling for web platform
+* Web browsers can now connect directly to snappy_web_agent daemon
+* Same real-time data streaming available in web applications
+* CORS support for cross-origin web app access
+* Updated platform detection to include web support
+* No breaking changes - patch release for additional platform
+
 ## 1.0.0
 
 * **First stable release** 🎉

@@ -1,9 +1,9 @@
 # flutter_snappy_plugin
 
-A Flutter plugin for SNAPPY remote device communication supporting Windows, Linux, and macOS platforms.
+A Flutter plugin for SNAPPY remote device communication supporting Windows, Linux, macOS, and web platforms.
 
 [![pub package](https://img.shields.io/pub/v/flutter_snappy_plugin.svg)](https://pub.dartlang.org/packages/flutter_snappy_plugin)
-[![Platform Support](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue.svg)](https://flutter.dev/desktop)
+[![Platform Support](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20Web-blue.svg)](https://flutter.dev/multi-platform)
 [![Flutter](https://img.shields.io/badge/Flutter-3.0+-blue.svg)](https://flutter.dev)
 
 ## Platform Support
@@ -13,6 +13,7 @@ A Flutter plugin for SNAPPY remote device communication supporting Windows, Linu
 | Windows  | ✅ Ready | Socket.IO → snappy_web_agent | snappy_web_agent daemon |
 | Linux    | ✅ Ready | Socket.IO → snappy_web_agent | snappy_web_agent daemon |
 | macOS    | ✅ Ready | Socket.IO → snappy_web_agent | snappy_web_agent daemon |
+| Web      | ✅ Ready | Socket.IO → snappy_web_agent | snappy_web_agent daemon + CORS |
 | Android  | 🚧 Coming Soon | BLE → remotesdk.aar | BLE-enabled device |
 
 ## Features
@@ -20,7 +21,7 @@ A Flutter plugin for SNAPPY remote device communication supporting Windows, Linu
 - **Real-time Data Streaming** - Live data from SNAPPY devices
 - **Automatic Daemon Detection** - Finds and connects to snappy_web_agent on ports 8436-8535
 - **Device Connection Monitoring** - Automatic device status detection and reconnection
-- **Cross-Platform API** - Unified interface across Windows, Linux, and macOS
+- **Cross-Platform API** - Unified interface across Windows, Linux, macOS, and web
 - **Error Recovery** - Comprehensive error handling with automatic reconnection
 - **Lightweight** - Minimal dependencies, efficient Socket.IO communication
 
@@ -213,14 +214,14 @@ Check out the [example app](example/) for a complete implementation showing:
 ### Running the Example
 ```bash
 cd example
-flutter run -d windows  # or -d linux, -d macos
+flutter run -d windows  # or -d linux, -d macos, -d chrome
 ```
 
 ## Requirements
 
 ### System Requirements
 - Flutter SDK 3.0+
-- Windows 11, Linux, or macOS system
+- Windows 11, Linux, macOS, or modern web browser
 - SNAPPY device with USB connection (VID: 0xb1b0, PID: 0x5508)
 
 ### Runtime Dependencies

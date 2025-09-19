@@ -161,6 +161,7 @@ enum SnappyPlatform {
   windows,
   linux,
   macos,
+  web,
   unsupported,
 }
 

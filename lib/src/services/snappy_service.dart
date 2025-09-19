@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import '../models/models.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 // Import desktop service implementation
 import 'desktop_service.dart';
@@ -103,6 +104,7 @@ class SnappyServiceFactory {
       case SnappyPlatform.windows:
       case SnappyPlatform.linux:
       case SnappyPlatform.macos:
+      case SnappyPlatform.web:
       // Import is handled dynamically to avoid issues on other platforms
         return _createDesktopService();
       case SnappyPlatform.android:
@@ -123,6 +125,9 @@ class SnappyServiceFactory {
 
   /// Detect current platform
   static SnappyPlatform _detectPlatform() {
+    if (kIsWeb) {
+      return SnappyPlatform.web;
+    }
     if (Platform.isWindows) return SnappyPlatform.windows;
     if (Platform.isLinux) return SnappyPlatform.linux;
     if (Platform.isMacOS) return SnappyPlatform.macos;
