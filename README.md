@@ -253,10 +253,9 @@ SocketIO: Connected successfully to http://localhost:8436
 
 ## Roadmap
 
-- ✅ **v1.0.0-beta.1** - Windows & Linux support via Socket.IO
-- ✅ **v1.1.0** - macOS support via Socket.IO daemon
-- 🚧 **v1.2.0** - Android BLE integration with remotesdk.aar
-- 🚧 **v1.3.0** - iOS support with daemon communication
+- ✅ **v1.0.0** - Stable release with Windows, Linux, and macOS support via Socket.IO
+- 🚧 **v1.1.0** - Android BLE integration with remotesdk.aar
+- 🚧 **v1.2.0** - iOS support with daemon communication
 - 🚧 **v2.0.0** - Advanced analytics and data processing features
 
 ## Contributing
