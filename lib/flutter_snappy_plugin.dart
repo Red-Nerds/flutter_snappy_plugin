@@ -1,15 +1,15 @@
 /// Flutter Plugin for SNAPPY remote device communication
-/// 
+///
 /// Supports:
 /// - Windows/Linux: Via Socket.IO communication with snappy_web_agent daemon
 /// - Android: Via BLE communication with remotesdk.aar (coming soon)
-/// 
+///
 /// Usage:
 /// ```dart
 /// final plugin = FlutterSnappyPlugin.instance;
 /// await plugin.connect();
 /// await plugin.startDataCollection();
-/// 
+///
 /// plugin.dataStream.listen((data) {
 ///   print('Received: ${data.value} from ${data.mac}');
 /// });
@@ -177,7 +177,8 @@ class FlutterSnappyPlugin {
   // Platform detection and utility methods
 
   /// Get current platform
-  SnappyPlatform get currentPlatform => SnappyServiceFactory.getCurrentPlatform();
+  SnappyPlatform get currentPlatform =>
+      SnappyServiceFactory.getCurrentPlatform();
 
   /// Check if current platform is supported
   bool get isPlatformSupported => SnappyServiceFactory.isPlatformSupported();
@@ -203,7 +204,8 @@ class FlutterSnappyPlugin {
   ///
   /// **Android only** - Pairs with discovered SNAPPY device
   /// Throws [UnimplementedError] on other platforms
-  Future<PairingResult> pairRemote(String setName, String mac, int manufacturerId) {
+  Future<PairingResult> pairRemote(
+      String setName, String mac, int manufacturerId) {
     _ensureInitialized();
     return _service!.pairRemote(setName, mac, manufacturerId);
   }
@@ -212,9 +214,11 @@ class FlutterSnappyPlugin {
   ///
   /// **Android only** - Unpairs previously paired device
   /// Throws [UnimplementedError] on other platforms
-  Future<bool> unpairRemote(String setName, int remoteId, {bool shiftSequence = false}) {
+  Future<bool> unpairRemote(String setName, int remoteId,
+      {bool shiftSequence = false}) {
     _ensureInitialized();
-    return _service!.unpairRemote(setName, remoteId, shiftSequence: shiftSequence);
+    return _service!
+        .unpairRemote(setName, remoteId, shiftSequence: shiftSequence);
   }
 
   /// Scan for button presses from paired remotes
@@ -274,7 +278,8 @@ class FlutterSnappyPlugin {
     if (_service is DesktopSnappyService) {
       return await (_service as DesktopSnappyService).testConnection();
     } else {
-      throw UnimplementedError('testConnection is only available on Desktop platforms');
+      throw UnimplementedError(
+          'testConnection is only available on Desktop platforms');
     }
   }
 
@@ -294,7 +299,7 @@ class FlutterSnappyPlugin {
   }
 
   /// Reset plugin to initial state
-  /// 
+  ///
   /// Useful for testing or re-initialization
   static Future<void> reset() async {
     if (_instance != null) {

@@ -52,22 +52,28 @@ abstract class SnappyService {
 
   /// Scan for available devices (Android BLE scanning)
   Stream<DeviceInfo> scanForDevices() {
-    throw UnimplementedError('scanForDevices is only available on Android platform');
+    throw UnimplementedError(
+        'scanForDevices is only available on Android platform');
   }
 
   /// Pair with a BLE device (Android only)
-  Future<PairingResult> pairRemote(String setName, String mac, int manufacturerId) {
-    throw UnimplementedError('pairRemote is only available on Android platform');
+  Future<PairingResult> pairRemote(
+      String setName, String mac, int manufacturerId) {
+    throw UnimplementedError(
+        'pairRemote is only available on Android platform');
   }
 
   /// Unpair a BLE device (Android only)
-  Future<bool> unpairRemote(String setName, int remoteId, {bool shiftSequence = false}) {
-    throw UnimplementedError('unpairRemote is only available on Android platform');
+  Future<bool> unpairRemote(String setName, int remoteId,
+      {bool shiftSequence = false}) {
+    throw UnimplementedError(
+        'unpairRemote is only available on Android platform');
   }
 
   /// Scan for button presses from paired remotes (Android only)
   Stream<AnswerData> scanAnswers(String setName, {int? remoteId}) {
-    throw UnimplementedError('scanAnswers is only available on Android platform');
+    throw UnimplementedError(
+        'scanAnswers is only available on Android platform');
   }
 
   /// Upload encrypted device set (Android only)
@@ -77,17 +83,20 @@ abstract class SnappyService {
 
   /// Save device list (Android only)
   Future<bool> saveDeviceList(String listName, List<DeviceInfo> devices) {
-    throw UnimplementedError('saveDeviceList is only available on Android platform');
+    throw UnimplementedError(
+        'saveDeviceList is only available on Android platform');
   }
 
   /// Load saved device list (Android only)
   Future<List<DeviceInfo>?> loadDeviceList(String listName) {
-    throw UnimplementedError('loadDeviceList is only available on Android platform');
+    throw UnimplementedError(
+        'loadDeviceList is only available on Android platform');
   }
 
   /// Get saved device list names (Android only)
   Future<List<String>> getSavedDeviceListNames() {
-    throw UnimplementedError('getSavedDeviceListNames is only available on Android platform');
+    throw UnimplementedError(
+        'getSavedDeviceListNames is only available on Android platform');
   }
 
   /// Dispose all resources
@@ -105,16 +114,16 @@ class SnappyServiceFactory {
       case SnappyPlatform.linux:
       case SnappyPlatform.macos:
       case SnappyPlatform.web:
-      // Import is handled dynamically to avoid issues on other platforms
+        // Import is handled dynamically to avoid issues on other platforms
         return _createDesktopService();
       case SnappyPlatform.android:
-      // Will be implemented later
-        throw UnimplementedError('Android support coming soon. Use the Android AAR wrapper when available.');
+        // Will be implemented later
+        throw UnimplementedError(
+            'Android support coming soon. Use the Android AAR wrapper when available.');
       case SnappyPlatform.unsupported:
         throw SnappyPluginException(
             'Unsupported platform. SNAPPY plugin supports Windows, Linux, and Android only.',
-            code: 'UNSUPPORTED_PLATFORM'
-        );
+            code: 'UNSUPPORTED_PLATFORM');
     }
   }
 
@@ -139,7 +148,8 @@ class SnappyServiceFactory {
   static SnappyPlatform getCurrentPlatform() => _detectPlatform();
 
   /// Check if current platform is supported
-  static bool isPlatformSupported() => getCurrentPlatform() != SnappyPlatform.unsupported;
+  static bool isPlatformSupported() =>
+      getCurrentPlatform() != SnappyPlatform.unsupported;
 
   /// Check if running on Android
   static bool isAndroid() => getCurrentPlatform() == SnappyPlatform.android;

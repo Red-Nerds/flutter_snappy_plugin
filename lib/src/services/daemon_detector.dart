@@ -11,9 +11,7 @@ class DaemonDetector {
 
   /// Detect snappy_web_agent daemon and return connection info
   static Future<DaemonInfo?> detectDaemon() async {
-
     for (int port = _startPort; port <= _endPort; port++) {
-
       final daemonInfo = await _testPort(port);
       if (daemonInfo != null) {
         return daemonInfo;
@@ -31,20 +29,20 @@ class DaemonDetector {
       final completer = Completer<DaemonInfo?>();
 
       // Create socket connection with timeout
-      socket = io.io(url, io.OptionBuilder()
-          .setTransports(['websocket', 'polling'])
-          .enableForceNew()
-          .setTimeout(_connectionTimeout.inMilliseconds)
-          .disableAutoConnect()
-          .build());
+      socket = io.io(
+          url,
+          io.OptionBuilder()
+              .setTransports(['websocket', 'polling'])
+              .enableForceNew()
+              .setTimeout(_connectionTimeout.inMilliseconds)
+              .disableAutoConnect()
+              .build());
 
       // Set up handlers
       socket.onConnect((_) {
-
         // Test if this is actually snappy_web_agent by getting version
         socket!.emitWithAck('version', null, ack: (response) {
           try {
-
             Map<String, dynamic>? responseData;
 
             // Handle both List and direct Map response formats
@@ -57,7 +55,8 @@ class DaemonDetector {
             if (responseData != null) {
               final pluginResponse = PluginResponse.fromJson(responseData);
 
-              if (pluginResponse.success && pluginResponse.command == 'version') {
+              if (pluginResponse.success &&
+                  pluginResponse.command == 'version') {
                 final daemonInfo = DaemonInfo(
                   port: port,
                   version: pluginResponse.message,
@@ -110,7 +109,6 @@ class DaemonDetector {
       final result = await completer.future;
 
       return result;
-
     } catch (e) {
       return null;
     } finally {
@@ -127,7 +125,8 @@ class DaemonDetector {
   /// Quick port availability check (TCP connection test)
   static Future<bool> isPortOpen(String host, int port) async {
     try {
-      final socket = await Socket.connect(host, port, timeout: const Duration(seconds: 2));
+      final socket =
+          await Socket.connect(host, port, timeout: const Duration(seconds: 2));
       socket.destroy();
       return true;
     } catch (e) {

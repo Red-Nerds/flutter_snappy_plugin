@@ -5,11 +5,13 @@ import 'package:flutter_snappy_plugin/flutter_snappy_plugin_method_channel.dart'
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  MethodChannelFlutterSnappyPlugin platform = MethodChannelFlutterSnappyPlugin();
+  MethodChannelFlutterSnappyPlugin platform =
+      MethodChannelFlutterSnappyPlugin();
   const MethodChannel channel = MethodChannel('flutter_snappy_plugin');
 
   setUp(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
       channel,
       (MethodCall methodCall) async {
         return '42';
@@ -18,7 +20,8 @@ void main() {
   });
 
   tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
   });
 
   test('getPlatformVersion', () async {

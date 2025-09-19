@@ -74,7 +74,8 @@ class _MyHomePageState extends State<MyHomePage> {
       }
 
       setState(() {
-        _status = 'Platform: ${_plugin.currentPlatform.name} - Setting up streams...';
+        _status =
+            'Platform: ${_plugin.currentPlatform.name} - Setting up streams...';
       });
 
       // Setup connection stream
@@ -100,7 +101,9 @@ class _MyHomePageState extends State<MyHomePage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                connected ? 'SNAPPY device connected!' : 'SNAPPY device disconnected',
+                connected
+                    ? 'SNAPPY device connected!'
+                    : 'SNAPPY device disconnected',
               ),
               backgroundColor: connected ? Colors.green : Colors.orange,
               duration: const Duration(seconds: 2),
@@ -121,9 +124,9 @@ class _MyHomePageState extends State<MyHomePage> {
       });
 
       setState(() {
-        _status = 'Platform: ${_plugin.currentPlatform.name} - Ready to connect';
+        _status =
+            'Platform: ${_plugin.currentPlatform.name} - Ready to connect';
       });
-
     } catch (e) {
       setState(() {
         _status = 'Initialization failed: ${e.toString()}';
@@ -196,7 +199,8 @@ class _MyHomePageState extends State<MyHomePage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to start collection: ${response.error ?? response.message}'),
+            content: Text(
+                'Failed to start collection: ${response.error ?? response.message}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -229,7 +233,8 @@ class _MyHomePageState extends State<MyHomePage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to stop collection: ${response.error ?? response.message}'),
+            content: Text(
+                'Failed to stop collection: ${response.error ?? response.message}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -270,7 +275,8 @@ class _MyHomePageState extends State<MyHomePage> {
     if (!_plugin.isDesktop) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Connection test is only available on desktop platforms'),
+          content:
+              Text('Connection test is only available on desktop platforms'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -310,7 +316,8 @@ class _MyHomePageState extends State<MyHomePage> {
             children: [
               _buildTestResult('Daemon Detection', results['daemonDetection']),
               const SizedBox(height: 16),
-              _buildTestResult('Socket Connection', results['socketConnection']),
+              _buildTestResult(
+                  'Socket Connection', results['socketConnection']),
               const SizedBox(height: 16),
               _buildTestResult('Version Command', results['versionCommand']),
               if (results['error'] != null) ...[
@@ -434,7 +441,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         Text(
                           _deviceConnected ? 'Device Connected' : 'No Device',
                           style: TextStyle(
-                            color: _deviceConnected ? Colors.green : Colors.grey,
+                            color:
+                                _deviceConnected ? Colors.green : Colors.grey,
                           ),
                         ),
                       ],
@@ -464,7 +472,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 ElevatedButton.icon(
                   onPressed: _isCollecting ? _stopCollection : _startCollection,
                   icon: Icon(_isCollecting ? Icons.stop : Icons.play_arrow),
-                  label: Text(_isCollecting ? 'Stop Collection' : 'Start Collection'),
+                  label: Text(
+                      _isCollecting ? 'Stop Collection' : 'Start Collection'),
                 ),
                 ElevatedButton.icon(
                   onPressed: _plugin.isDesktop ? _testConnection : null,
@@ -546,84 +555,85 @@ class _MyHomePageState extends State<MyHomePage> {
                     Expanded(
                       child: _dataHistory.isEmpty
                           ? const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.data_usage_outlined,
-                              size: 64,
-                              color: Colors.grey,
-                            ),
-                            SizedBox(height: 16),
-                            Text(
-                              'No data received yet',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Connect to service and start data collection',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                      )
-                          : ListView.builder(
-                        itemCount: _dataHistory.length,
-                        itemBuilder: (context, index) {
-                          final data = _dataHistory[index];
-                          final isLatest = index == 0;
-                          return Container(
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isLatest
-                                  ? Colors.green.withOpacity(0.1)
-                                  : null,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: ListTile(
-                              dense: true,
-                              leading: CircleAvatar(
-                                backgroundColor: isLatest
-                                    ? Colors.green
-                                    : Colors.grey,
-                                radius: 16,
-                                child: Text(
-                                  '${data.value}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.data_usage_outlined,
+                                    size: 64,
+                                    color: Colors.grey,
                                   ),
-                                ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'No data received yet',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Connect to service and start data collection',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ],
                               ),
-                              title: Text(
-                                'MAC: ${data.mac}',
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                              subtitle: Text(
-                                'Time: ${_formatTimestamp(data.timestamp)}',
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              trailing: data.pid != null
-                                  ? Chip(
-                                label: Text(
-                                  'PID: ${data.pid}',
-                                  style: const TextStyle(fontSize: 10),
-                                ),
-                                materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                              )
-                                  : null,
+                            )
+                          : ListView.builder(
+                              itemCount: _dataHistory.length,
+                              itemBuilder: (context, index) {
+                                final data = _dataHistory[index];
+                                final isLatest = index == 0;
+                                return Container(
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isLatest
+                                        ? Colors.green.withOpacity(0.1)
+                                        : null,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: ListTile(
+                                    dense: true,
+                                    leading: CircleAvatar(
+                                      backgroundColor:
+                                          isLatest ? Colors.green : Colors.grey,
+                                      radius: 16,
+                                      child: Text(
+                                        '${data.value}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    title: Text(
+                                      'MAC: ${data.mac}',
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                    subtitle: Text(
+                                      'Time: ${_formatTimestamp(data.timestamp)}',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                    trailing: data.pid != null
+                                        ? Chip(
+                                            label: Text(
+                                              'PID: ${data.pid}',
+                                              style:
+                                                  const TextStyle(fontSize: 10),
+                                            ),
+                                            materialTapTargetSize:
+                                                MaterialTapTargetSize
+                                                    .shrinkWrap,
+                                          )
+                                        : null,
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
                     ),
                   ],
                 ),
@@ -670,10 +680,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              _buildPlatformInfo('Windows', _plugin.currentPlatform == SnappyPlatform.windows),
-              _buildPlatformInfo('Linux', _plugin.currentPlatform == SnappyPlatform.linux),
-              _buildPlatformInfo('macOS', _plugin.currentPlatform == SnappyPlatform.macos),
-              _buildPlatformInfo('Android', _plugin.currentPlatform == SnappyPlatform.android, note: 'Coming Soon'),
+              _buildPlatformInfo(
+                  'Windows', _plugin.currentPlatform == SnappyPlatform.windows),
+              _buildPlatformInfo(
+                  'Linux', _plugin.currentPlatform == SnappyPlatform.linux),
+              _buildPlatformInfo(
+                  'macOS', _plugin.currentPlatform == SnappyPlatform.macos),
+              _buildPlatformInfo(
+                  'Android', _plugin.currentPlatform == SnappyPlatform.android,
+                  note: 'Coming Soon'),
               const SizedBox(height: 16),
               const Text(
                 'Features:',

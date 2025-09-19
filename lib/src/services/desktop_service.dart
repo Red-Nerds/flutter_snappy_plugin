@@ -10,9 +10,12 @@ class DesktopSnappyService extends SnappyService {
   SnappySocketClient? _socketClient;
   DaemonInfo? _currentDaemon;
 
-  final StreamController<bool> _connectionController = StreamController<bool>.broadcast();
-  final StreamController<bool> _deviceConnectionController = StreamController<bool>.broadcast();
-  final StreamController<SnapData> _dataController = StreamController<SnapData>.broadcast();
+  final StreamController<bool> _connectionController =
+      StreamController<bool>.broadcast();
+  final StreamController<bool> _deviceConnectionController =
+      StreamController<bool>.broadcast();
+  final StreamController<SnapData> _dataController =
+      StreamController<SnapData>.broadcast();
 
   bool _isDisposed = false;
   bool _isConnected = false;
@@ -32,7 +35,8 @@ class DesktopSnappyService extends SnappyService {
   Stream<SnapData> get dataStream => _dataController.stream;
 
   @override
-  bool get isCurrentlyConnected => _isConnected && (_socketClient?.isConnected ?? false);
+  bool get isCurrentlyConnected =>
+      _isConnected && (_socketClient?.isConnected ?? false);
 
   @override
   bool get isDeviceCurrentlyConnected => _deviceConnected;
@@ -61,7 +65,8 @@ class DesktopSnappyService extends SnappyService {
         _emitConnectionStatus(false, 'Daemon not found');
         return PluginResponse(
           success: false,
-          message: 'SNAPPY Web Agent daemon not found. Please ensure the daemon is running on ports 8436-8535.',
+          message:
+              'SNAPPY Web Agent daemon not found. Please ensure the daemon is running on ports 8436-8535.',
           command: 'connect',
           error: 'DAEMON_NOT_FOUND',
         );
@@ -78,7 +83,8 @@ class DesktopSnappyService extends SnappyService {
         _emitConnectionStatus(false, 'Failed to connect to daemon');
         return PluginResponse(
           success: false,
-          message: 'Failed to connect to SNAPPY Web Agent daemon at ${daemon.url}',
+          message:
+              'Failed to connect to SNAPPY Web Agent daemon at ${daemon.url}',
           command: 'connect',
           error: 'CONNECTION_FAILED',
         );
@@ -91,14 +97,15 @@ class DesktopSnappyService extends SnappyService {
       _startDaemonMonitoring();
 
       _isConnected = true;
-      _emitConnectionStatus(true, 'Connected to SNAPPY Web Agent v${daemon.version}');
+      _emitConnectionStatus(
+          true, 'Connected to SNAPPY Web Agent v${daemon.version}');
 
       return PluginResponse(
         success: true,
-        message: 'Connected to SNAPPY Web Agent v${daemon.version} at ${daemon.url}',
+        message:
+            'Connected to SNAPPY Web Agent v${daemon.version} at ${daemon.url}',
         command: 'connect',
       );
-
     } catch (e) {
       print('DesktopService: Connection error: $e');
       _emitConnectionStatus(false, 'Connection error: ${e.toString()}');
@@ -196,7 +203,8 @@ class DesktopSnappyService extends SnappyService {
 
   /// Emit connection status to stream
   void _emitConnectionStatus(bool connected, String message) {
-    print('DesktopService: Status update - Connected: $connected, Message: $message');
+    print(
+        'DesktopService: Status update - Connected: $connected, Message: $message');
     _isConnected = connected;
     _connectionController.add(connected);
   }
@@ -230,7 +238,7 @@ class DesktopSnappyService extends SnappyService {
 
     // Forward connection status
     _connectionSub = _socketClient!.connectionStream.listen(
-          (connected) {
+      (connected) {
         _isConnected = connected;
         _connectionController.add(connected);
       },
@@ -246,7 +254,7 @@ class DesktopSnappyService extends SnappyService {
 
     // Forward device connection events
     _deviceSub = _socketClient!.deviceConnectionStream.listen(
-          (event) {
+      (event) {
         print('DesktopService: Device event received: ${event.toString()}');
         _deviceConnected = event.isConnected;
         _deviceConnectionController.add(event.isConnected);
@@ -263,7 +271,7 @@ class DesktopSnappyService extends SnappyService {
 
     // Forward snap data
     _dataSub = _socketClient!.dataStream.listen(
-          (data) {
+      (data) {
         print('DesktopService: Data received: ${data.toString()}');
         _dataController.add(data);
       },
@@ -329,11 +337,13 @@ class DesktopSnappyService extends SnappyService {
       results['daemonDetection'] = {
         'success': daemon != null,
         'duration': detectDuration.inMilliseconds,
-        'daemon': daemon != null ? {
-          'port': daemon.port,
-          'version': daemon.version,
-          'url': daemon.url,
-        } : null,
+        'daemon': daemon != null
+            ? {
+                'port': daemon.port,
+                'version': daemon.version,
+                'url': daemon.url,
+              }
+            : null,
       };
 
       if (daemon != null) {
@@ -367,7 +377,6 @@ class DesktopSnappyService extends SnappyService {
       // Test port availability
       final availablePorts = await DaemonDetector.getAvailablePorts();
       results['availablePorts'] = availablePorts;
-
     } catch (e) {
       results['error'] = e.toString();
     }

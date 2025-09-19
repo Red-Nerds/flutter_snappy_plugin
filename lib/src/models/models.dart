@@ -22,7 +22,8 @@ class PluginResponse {
   Map<String, dynamic> toJson() => _$PluginResponseToJson(this);
 
   @override
-  String toString() => 'PluginResponse(success: $success, message: $message, command: $command, error: $error)';
+  String toString() =>
+      'PluginResponse(success: $success, message: $message, command: $command, error: $error)';
 }
 
 /// Device information - Compatible with both Android AAR and Desktop Socket.IO
@@ -43,7 +44,8 @@ class DeviceInfo {
   Map<String, dynamic> toJson() => _$DeviceInfoToJson(this);
 
   @override
-  String toString() => 'DeviceInfo(name: $name, mac: $mac, manufacturerId: $manufacturerId)';
+  String toString() =>
+      'DeviceInfo(name: $name, mac: $mac, manufacturerId: $manufacturerId)';
 }
 
 /// Real-time data from SNAPPY devices via Socket.IO (Desktop) or BLE (Android)
@@ -68,7 +70,8 @@ class SnapData {
   Map<String, dynamic> toJson() => _$SnapDataToJson(this);
 
   @override
-  String toString() => 'SnapData(mac: $mac, value: $value, timestamp: $timestamp, pid: $pid, remoteId: $remoteId)';
+  String toString() =>
+      'SnapData(mac: $mac, value: $value, timestamp: $timestamp, pid: $pid, remoteId: $remoteId)';
 }
 
 /// Connection status event
@@ -112,7 +115,8 @@ class PairingResult {
   Map<String, dynamic> toJson() => _$PairingResultToJson(this);
 
   @override
-  String toString() => 'PairingResult(success: $success, remoteId: $remoteId, mac: $mac)';
+  String toString() =>
+      'PairingResult(success: $success, remoteId: $remoteId, mac: $mac)';
 }
 
 /// Button press data from Android BLE devices
@@ -133,7 +137,8 @@ class AnswerData {
   Map<String, dynamic> toJson() => _$AnswerDataToJson(this);
 
   @override
-  String toString() => 'AnswerData(remoteId: $remoteId, buttonPressed: $buttonPressed, mac: $mac)';
+  String toString() =>
+      'AnswerData(remoteId: $remoteId, buttonPressed: $buttonPressed, mac: $mac)';
 }
 
 /// Upload status for Android set management
@@ -172,11 +177,12 @@ class SnappyPluginException implements Exception {
   final dynamic originalError;
 
   const SnappyPluginException(
-      this.message, {
-        this.code,
-        this.originalError,
-      });
+    this.message, {
+    this.code,
+    this.originalError,
+  });
 
   @override
-  String toString() => 'SnappyPluginException: $message${code != null ? ' (Code: $code)' : ''}';
+  String toString() =>
+      'SnappyPluginException: $message${code != null ? ' (Code: $code)' : ''}';
 }

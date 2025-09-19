@@ -7,13 +7,13 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 class MockFlutterSnappyPluginPlatform
     with MockPlatformInterfaceMixin
     implements FlutterSnappyPluginPlatform {
-
   @override
   Future<String?> getPlatformVersion() => Future.value('42');
 }
 
 void main() {
-  final FlutterSnappyPluginPlatform initialPlatform = FlutterSnappyPluginPlatform.instance;
+  final FlutterSnappyPluginPlatform initialPlatform =
+      FlutterSnappyPluginPlatform.instance;
 
   test('$MethodChannelFlutterSnappyPlugin is the default instance', () {
     expect(initialPlatform, isInstanceOf<MethodChannelFlutterSnappyPlugin>());
@@ -21,7 +21,8 @@ void main() {
 
   test('getPlatformVersion', () async {
     FlutterSnappyPlugin flutterSnappyPlugin = FlutterSnappyPlugin();
-    MockFlutterSnappyPluginPlatform fakePlatform = MockFlutterSnappyPluginPlatform();
+    MockFlutterSnappyPluginPlatform fakePlatform =
+        MockFlutterSnappyPluginPlatform();
     FlutterSnappyPluginPlatform.instance = fakePlatform;
 
     expect(await flutterSnappyPlugin.getPlatformVersion(), '42');

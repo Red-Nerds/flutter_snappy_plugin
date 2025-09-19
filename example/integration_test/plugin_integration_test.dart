@@ -21,24 +21,25 @@ void main() {
 
     test('should detect platform correctly', () {
       expect(plugin.isPlatformSupported, isTrue);
-      expect(plugin.currentPlatform, isIn([SnappyPlatform.windows, SnappyPlatform.linux]));
+      expect(plugin.currentPlatform,
+          isIn([SnappyPlatform.windows, SnappyPlatform.linux]));
       expect(plugin.isDesktop, isTrue);
       expect(plugin.isAndroid, isFalse);
     });
 
     test('should throw UnimplementedError for Android-only methods', () {
       expect(
-            () => plugin.scanForDevices(),
+        () => plugin.scanForDevices(),
         throwsA(isA<UnimplementedError>()),
       );
 
       expect(
-            () => plugin.pairRemote('test', 'AA:BB:CC:DD:EE:FF', 123),
+        () => plugin.pairRemote('test', 'AA:BB:CC:DD:EE:FF', 123),
         throwsA(isA<UnimplementedError>()),
       );
 
       expect(
-            () => plugin.unpairRemote('test', 1),
+        () => plugin.unpairRemote('test', 1),
         throwsA(isA<UnimplementedError>()),
       );
     });
@@ -66,7 +67,8 @@ void main() {
         expect(response.command, equals('connect'));
 
         // Test current connection status
-        await Future.delayed(const Duration(seconds: 1)); // Allow connection to establish
+        await Future.delayed(
+            const Duration(seconds: 1)); // Allow connection to establish
         expect(plugin.isCurrentlyConnected, isTrue);
       });
 
@@ -160,7 +162,8 @@ void main() {
         });
 
         await plugin.connect();
-        await Future.delayed(const Duration(seconds: 3)); // Wait for device status
+        await Future.delayed(
+            const Duration(seconds: 3)); // Wait for device status
 
         await subscription.cancel();
 
@@ -211,7 +214,8 @@ void main() {
         expect(testResults, isA<Map<String, dynamic>>());
         expect(testResults['daemonDetection'], isNotNull);
 
-        final daemonDetection = testResults['daemonDetection'] as Map<String, dynamic>;
+        final daemonDetection =
+            testResults['daemonDetection'] as Map<String, dynamic>;
         expect(daemonDetection['success'], isA<bool>());
         expect(daemonDetection['duration'], isA<int>());
 

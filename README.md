@@ -31,7 +31,7 @@ A Flutter plugin for SNAPPY remote device communication supporting Windows, Linu
 
 ```yaml
 dependencies:
-  flutter_snappy_plugin: ^1.0.0-beta.1
+  flutter_snappy_plugin: ^1.0.2
 ```
 
 ### 2. Basic Usage

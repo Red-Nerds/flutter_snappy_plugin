@@ -7,9 +7,12 @@ class SnappySocketClient {
   IO.Socket? _socket;
   final String _url;
 
-  final StreamController<bool> _connectionController = StreamController<bool>.broadcast();
-  final StreamController<DeviceConnectionEvent> _deviceController = StreamController<DeviceConnectionEvent>.broadcast();
-  final StreamController<SnapData> _dataController = StreamController<SnapData>.broadcast();
+  final StreamController<bool> _connectionController =
+      StreamController<bool>.broadcast();
+  final StreamController<DeviceConnectionEvent> _deviceController =
+      StreamController<DeviceConnectionEvent>.broadcast();
+  final StreamController<SnapData> _dataController =
+      StreamController<SnapData>.broadcast();
 
   bool _isConnected = false;
   bool _isDisposed = false;
@@ -20,7 +23,8 @@ class SnappySocketClient {
   Stream<bool> get connectionStream => _connectionController.stream;
 
   /// Stream of device connection events
-  Stream<DeviceConnectionEvent> get deviceConnectionStream => _deviceController.stream;
+  Stream<DeviceConnectionEvent> get deviceConnectionStream =>
+      _deviceController.stream;
 
   /// Stream of real-time snap data
   Stream<SnapData> get dataStream => _dataController.stream;
@@ -37,15 +41,17 @@ class SnappySocketClient {
 
       print('SocketIO: Attempting to connect to $_url');
 
-      _socket = IO.io(_url, IO.OptionBuilder()
-          .setTransports(['websocket', 'polling']) // Allow both transports
-          .enableForceNew() // Force new connection
-          .enableAutoConnect() // Auto connect
-          .setTimeout(10000) // 10 second timeout
-          .enableReconnection() // Enable reconnection
-          .setReconnectionAttempts(3)
-          .setReconnectionDelay(1000)
-          .build());
+      _socket = IO.io(
+          _url,
+          IO.OptionBuilder()
+              .setTransports(['websocket', 'polling']) // Allow both transports
+              .enableForceNew() // Force new connection
+              .enableAutoConnect() // Auto connect
+              .setTimeout(10000) // 10 second timeout
+              .enableReconnection() // Enable reconnection
+              .setReconnectionAttempts(3)
+              .setReconnectionDelay(1000)
+              .build());
 
       _setupSocketHandlers();
 
@@ -97,7 +103,6 @@ class SnappySocketClient {
       );
 
       return result;
-
     } catch (e) {
       print('SocketIO: Connection exception: $e');
       _isConnected = false;
@@ -197,7 +202,8 @@ class SnappySocketClient {
   }
 
   /// Send command to daemon and wait for response
-  Future<PluginResponse> sendCommand(String event, {Map<String, dynamic>? data}) async {
+  Future<PluginResponse> sendCommand(String event,
+      {Map<String, dynamic>? data}) async {
     if (!isConnected) {
       return PluginResponse(
         success: false,
@@ -259,7 +265,6 @@ class SnappySocketClient {
           );
         },
       );
-
     } catch (e) {
       print('SocketIO: Error sending command "$event": $e');
       return PluginResponse(
