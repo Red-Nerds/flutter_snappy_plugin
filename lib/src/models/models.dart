@@ -160,6 +160,7 @@ enum SnappyPlatform {
   android,
   windows,
   linux,
+  macos,
   unsupported,
 }
 

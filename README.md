@@ -1,9 +1,9 @@
 # flutter_snappy_plugin
 
-A Flutter plugin for SNAPPY remote device communication supporting Windows and Linux platforms.
+A Flutter plugin for SNAPPY remote device communication supporting Windows, Linux, and macOS platforms.
 
 [![pub package](https://img.shields.io/pub/v/flutter_snappy_plugin.svg)](https://pub.dartlang.org/packages/flutter_snappy_plugin)
-[![Platform Support](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue.svg)](https://flutter.dev/desktop)
+[![Platform Support](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue.svg)](https://flutter.dev/desktop)
 [![Flutter](https://img.shields.io/badge/Flutter-3.0+-blue.svg)](https://flutter.dev)
 
 ## Platform Support
@@ -12,6 +12,7 @@ A Flutter plugin for SNAPPY remote device communication supporting Windows and L
 |----------|--------|---------------------|-------------|
 | Windows  | ✅ Ready | Socket.IO → snappy_web_agent | snappy_web_agent daemon |
 | Linux    | ✅ Ready | Socket.IO → snappy_web_agent | snappy_web_agent daemon |
+| macOS    | ✅ Ready | Socket.IO → snappy_web_agent | snappy_web_agent daemon |
 | Android  | 🚧 Coming Soon | BLE → remotesdk.aar | BLE-enabled device |
 
 ## Features
@@ -19,7 +20,7 @@ A Flutter plugin for SNAPPY remote device communication supporting Windows and L
 - **Real-time Data Streaming** - Live data from SNAPPY devices
 - **Automatic Daemon Detection** - Finds and connects to snappy_web_agent on ports 8436-8535
 - **Device Connection Monitoring** - Automatic device status detection and reconnection
-- **Cross-Platform API** - Unified interface across Windows and Linux
+- **Cross-Platform API** - Unified interface across Windows, Linux, and macOS
 - **Error Recovery** - Comprehensive error handling with automatic reconnection
 - **Lightweight** - Minimal dependencies, efficient Socket.IO communication
 
@@ -212,14 +213,14 @@ Check out the [example app](example/) for a complete implementation showing:
 ### Running the Example
 ```bash
 cd example
-flutter run -d windows  # or -d linux
+flutter run -d windows  # or -d linux, -d macos
 ```
 
 ## Requirements
 
 ### System Requirements
 - Flutter SDK 3.0+
-- Windows 11 or Linux system
+- Windows 11, Linux, or macOS system
 - SNAPPY device with USB connection (VID: 0xb1b0, PID: 0x5508)
 
 ### Runtime Dependencies
@@ -235,7 +236,7 @@ flutter run -d windows  # or -d linux
 |-------|-------------|----------|
 | `DAEMON_NOT_FOUND` | snappy_web_agent not running | Install and start daemon |
 | `CONNECTION_FAILED` | Can't connect to daemon | Check firewall, ports 8436-8535 |
-| `PLATFORM_UNSUPPORTED` | Unsupported platform | Use Windows or Linux |
+| `PLATFORM_UNSUPPORTED` | Unsupported platform | Use Windows, Linux, or macOS |
 | No device detected | SNAPPY device not found | Check USB connection and permissions |
 
 ### Debug Information
@@ -253,8 +254,9 @@ SocketIO: Connected successfully to http://localhost:8436
 ## Roadmap
 
 - ✅ **v1.0.0-beta.1** - Windows & Linux support via Socket.IO
-- 🚧 **v1.1.0** - Android BLE integration with remotesdk.aar
-- 🚧 **v1.2.0** - iOS support with daemon communication
+- ✅ **v1.1.0** - macOS support via Socket.IO daemon
+- 🚧 **v1.2.0** - Android BLE integration with remotesdk.aar
+- 🚧 **v1.3.0** - iOS support with daemon communication
 - 🚧 **v2.0.0** - Advanced analytics and data processing features
 
 ## Contributing

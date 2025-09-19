@@ -5,7 +5,7 @@ This guide covers system-level setup and prerequisites for the Flutter SNAPPY Pl
 ## System Requirements
 
 - **Flutter SDK**: 3.0 or higher
-- **Operating System**: Windows 11 or Linux (Ubuntu 20.04+, other distributions)
+- **Operating System**: Windows 11, Linux (Ubuntu 20.04+, other distributions), or macOS (10.15+)
 - **Hardware**: SNAPPY device with USB connection
 - **Network**: Available ports in range 8436-8535
 
@@ -142,6 +142,109 @@ lsusb | grep -i "b1b0:5508"
 
 # Check device permissions
 ls -la /dev/ttyACM* /dev/ttyUSB* 2>/dev/null | grep dialout
+```
+
+#### macOS Setup
+
+**Step 1: Download and Install**
+```bash
+# Download the macOS PKG installer
+# snappy-web-agent-[version]-universal.pkg
+
+# Install using Installer.app (double-click) or command line:
+sudo installer -pkg snappy-web-agent-[version]-universal.pkg -target /
+```
+
+**Step 2: Verify Installation**
+```bash
+# Check if daemon is loaded and running
+sudo launchctl list | grep com.snappy.webagent
+
+# Should show something like:
+# -	0	com.snappy.webagent
+
+# Check listening ports
+netstat -an | grep "843"
+
+# Should show something like:
+# tcp4       0      0  127.0.0.1.8436         *.*                    LISTEN
+
+# Alternative using lsof
+lsof -i :8436
+```
+
+**Step 3: Service Management**
+```bash
+# Start daemon (if not running)
+sudo launchctl start com.snappy.webagent
+
+# Stop daemon
+sudo launchctl stop com.snappy.webagent
+
+# Reload daemon configuration
+sudo launchctl unload /Library/LaunchDaemons/com.snappy.webagent.plist
+sudo launchctl load /Library/LaunchDaemons/com.snappy.webagent.plist
+
+# Check daemon status
+sudo launchctl list com.snappy.webagent
+```
+
+**Step 4: Device Access Setup**
+```bash
+# macOS handles USB device access automatically for most devices
+# If you encounter permission issues:
+
+# Check USB device detection
+system_profiler SPUSBDataType | grep -A5 -B5 "b1b0"
+
+# For serial device access, ensure your user has access:
+ls -la /dev/cu.* | grep -i usb
+
+# If needed, add user to specific groups (usually not required on macOS):
+sudo dseditgroup -o edit -a $USER -t user wheel
+```
+
+**Step 5: Verify macOS Installation**
+```bash
+# Check daemon status
+sudo launchctl list | grep com.snappy.webagent
+
+# Check logs
+tail -f /var/log/snappy-web-agent/stdout.log
+tail -f /var/log/snappy-web-agent/stderr.log
+
+# Check listening ports
+lsof -i :8436-8535
+
+# Test device detection (with device connected)
+# Look for device in system profiler
+system_profiler SPUSBDataType | grep -A10 -B5 "Snappy\|b1b0"
+
+# Check serial devices
+ls -la /dev/cu.* /dev/tty.* | grep -i usb
+```
+
+**Step 6: macOS Firewall (if needed)**
+```bash
+# macOS firewall typically allows local connections automatically
+# If you need to explicitly allow (rare):
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /usr/local/bin/snappy-web-agent
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblockapp /usr/local/bin/snappy-web-agent
+```
+
+**Uninstallation (macOS)**
+```bash
+# Stop and unload the daemon
+sudo launchctl stop com.snappy.webagent
+sudo launchctl unload /Library/LaunchDaemons/com.snappy.webagent.plist
+
+# Remove files
+sudo rm -f /usr/local/bin/snappy-web-agent
+sudo rm -f /Library/LaunchDaemons/com.snappy.webagent.plist
+sudo rm -rf /usr/local/share/snappy-web-agent
+sudo rm -rf /var/log/snappy-web-agent
+
+echo "✅ Snappy Web Agent uninstalled from macOS"
 ```
 
 ### 2. SNAPPY Device Setup

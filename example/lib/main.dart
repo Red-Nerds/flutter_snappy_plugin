@@ -672,6 +672,7 @@ class _MyHomePageState extends State<MyHomePage> {
               const SizedBox(height: 8),
               _buildPlatformInfo('Windows', _plugin.currentPlatform == SnappyPlatform.windows),
               _buildPlatformInfo('Linux', _plugin.currentPlatform == SnappyPlatform.linux),
+              _buildPlatformInfo('macOS', _plugin.currentPlatform == SnappyPlatform.macos),
               _buildPlatformInfo('Android', _plugin.currentPlatform == SnappyPlatform.android, note: 'Coming Soon'),
               const SizedBox(height: 16),
               const Text(

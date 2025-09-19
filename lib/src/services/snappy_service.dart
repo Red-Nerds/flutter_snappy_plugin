@@ -102,6 +102,7 @@ class SnappyServiceFactory {
     switch (platform) {
       case SnappyPlatform.windows:
       case SnappyPlatform.linux:
+      case SnappyPlatform.macos:
       // Import is handled dynamically to avoid issues on other platforms
         return _createDesktopService();
       case SnappyPlatform.android:
@@ -124,6 +125,7 @@ class SnappyServiceFactory {
   static SnappyPlatform _detectPlatform() {
     if (Platform.isWindows) return SnappyPlatform.windows;
     if (Platform.isLinux) return SnappyPlatform.linux;
+    if (Platform.isMacOS) return SnappyPlatform.macos;
     if (Platform.isAndroid) return SnappyPlatform.android;
     return SnappyPlatform.unsupported;
   }
@@ -140,6 +142,8 @@ class SnappyServiceFactory {
   /// Check if running on Desktop (Windows/Linux)
   static bool isDesktop() {
     final platform = getCurrentPlatform();
-    return platform == SnappyPlatform.windows || platform == SnappyPlatform.linux;
+    return platform == SnappyPlatform.windows ||
+        platform == SnappyPlatform.linux ||
+        platform == SnappyPlatform.macos;
   }
 }
