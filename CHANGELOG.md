@@ -1,3 +1,25 @@
+## 1.0.3
+
+* macOS Build Fix 🔧
+* Fixed macOS platform registration errors (FlutterSnappyPlugin.registerWith not found)
+* Improved Flutter platform file generation for macOS compatibility
+* Enhanced macOS platform detection and validation
+* Added comprehensive macOS support documentation
+* Updated error messages to properly include macOS as supported platform
+* Added platform-specific utility methods (isMacOS, isWindows, isLinux)
+* Improved debugging and troubleshooting for macOS builds
+* Fixed dart_plugin_registrant.dart generation issues on macOS
+
+## 1.0.2
+
+* macOS Platform Support Added 🍎
+* Added macOS to supported platforms in pubspec.yaml
+* Extended desktop service to include macOS alongside Windows and Linux
+* Updated platform detection to recognize macOS as supported platform
+* macOS now uses same Socket.IO communication as other desktop platforms
+* Ready for snappy_web_agent daemon integration on macOS
+* Cross-platform compatibility for Windows, Linux, and macOS desktop environments
+
 ## 1.0.1
 
 * Added web platform support via Socket.IO communication

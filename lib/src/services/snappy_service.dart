@@ -161,4 +161,7 @@ class SnappyServiceFactory {
         platform == SnappyPlatform.linux ||
         platform == SnappyPlatform.macos;
   }
+
+  /// Check if running on macOS
+  static bool isMacOS() => getCurrentPlatform() == SnappyPlatform.macos;
 }

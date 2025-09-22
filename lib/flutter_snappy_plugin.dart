@@ -189,6 +189,15 @@ class FlutterSnappyPlugin {
   /// Check if running on Desktop (Windows/Linux)
   bool get isDesktop => SnappyServiceFactory.isDesktop();
 
+  /// Check if running on macOS
+  bool get isMacOS => SnappyServiceFactory.isMacOS();
+
+  /// Check if running on Windows
+  bool get isWindows => currentPlatform == SnappyPlatform.windows;
+
+  /// Check if running on Linux
+  bool get isLinux => currentPlatform == SnappyPlatform.linux;
+
   // Android-specific methods (will throw UnimplementedError on other platforms)
 
   /// Scan for available BLE devices
