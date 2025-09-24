@@ -47,6 +47,18 @@ class FlutterSnappyPlugin {
     _initialize();
   }
 
+  // =====================
+  // CRITICAL FIX: Add this required method for Dart-only plugins
+  // =====================
+
+  /// Required static method for Dart-only plugin registration
+  /// This is called by Flutter's plugin registration system
+  static void registerWith() {
+    // For Dart-only plugins, we just need to ensure the instance is created
+    // The actual initialization happens in the constructor
+    FlutterSnappyPlugin.instance;
+  }
+
   SnappyService? _service;
   bool _isInitialized = false;
 

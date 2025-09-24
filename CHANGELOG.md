@@ -1,3 +1,15 @@
+## 1.0.4
+
+* **Dart-only Plugin Registration Fix** 🔧
+* Fixed critical `FlutterSnappyPlugin.registerWith` method missing error
+* Added required static `registerWith()` method for Dart-only plugin compatibility
+* Resolved Windows build failures with `dart_plugin_registrant.dart` generation
+* Fixed plugin registration for all desktop platforms (Windows, Linux, macOS)
+* Enhanced plugin initialization process to work correctly with Flutter's plugin system
+* No breaking changes - existing functionality preserved
+* Improved error messages for plugin initialization failures
+* Better support for Flutter's automatic plugin registration mechanism
+
 ## 1.0.3
 
 * macOS Build Fix 🔧
